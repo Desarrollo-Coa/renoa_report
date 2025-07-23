@@ -9,9 +9,9 @@ export function Navbar() {
         <div className="flex items-center justify-between">
           {/* Breadcrumb */}
           <div className="flex items-center space-x-2 text-sm">
-            <span className="text-gray-500">Pages</span>
+            <span className="text-gray-500">COC</span>
             <span className="text-gray-400">/</span>
-            <span className="text-gray-900 font-medium">Dashboard</span>
+            <span className="text-gray-900 font-medium">CENTRAL DE OPERACIONES COSTA</span>
           </div>
 
           {/* Perfil */}
