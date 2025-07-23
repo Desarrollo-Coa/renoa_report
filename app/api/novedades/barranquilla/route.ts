@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+ import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { RowDataPacket } from 'mysql2/promise';
 
-// Define the interface for the database row
 interface NovedadRow extends RowDataPacket {
   id_novedad: number;
   consecutivo: string | number;
@@ -12,10 +11,11 @@ interface NovedadRow extends RowDataPacket {
   descripcion: string | null;
   gestion: string | null;
   critico: boolean;
-  imagenes: string | null; // GROUP_CONCAT result as a string
+  imagenes: string | null;
+  puesto: string;
+  cliente: string | null;
 }
 
-// Interface for the image objects after parsing
 interface Imagen {
   id_imagen: number;
   url_imagen: string;
@@ -34,9 +34,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const connection = await getConnection('barranquilla');
-    // Increase GROUP_CONCAT limit to handle long URLs
     await connection.execute('SET SESSION group_concat_max_len = 10000;');
-
     const [rows] = await connection.execute<NovedadRow[]>(`
       SELECT 
         n.id_novedad, 
@@ -47,6 +45,8 @@ export async function GET(request: NextRequest) {
         n.descripcion, 
         n.gestion, 
         n.evento_critico AS critico,
+        p.nombre_puesto AS puesto,
+        neg.nombre_negocio AS cliente,
         GROUP_CONCAT(
           JSON_OBJECT(
             'id_imagen', i.id_imagen,
@@ -58,6 +58,9 @@ export async function GET(request: NextRequest) {
       FROM novedades n
       JOIN users u ON n.id_usuario = u.id
       JOIN tipos_evento te ON n.id_tipo_evento = te.id_tipo_evento
+      JOIN puestos p ON n.id_puesto = p.id_puesto
+      JOIN unidades_negocio un ON p.id_unidad = un.id_unidad
+      JOIN negocios neg ON un.id_negocio = neg.id_negocio
       LEFT JOIN imagenes_novedades i ON n.id_novedad = i.id_novedad
       WHERE DATE(n.fecha_hora_novedad) BETWEEN ? AND ?
       GROUP BY n.id_novedad
@@ -66,7 +69,6 @@ export async function GET(request: NextRequest) {
 
     await connection.end();
 
-    // Debugging: Log raw database data
     console.log('Datos crudos de la base de datos (Barranquilla):', rows);
 
     const standardizedData = {
@@ -83,6 +85,8 @@ export async function GET(request: NextRequest) {
           gestion: row.gestion || '',
           critico: row.critico || false,
           consecutivo: row.consecutivo,
+          puesto: row.puesto || 'N/A',
+          cliente: row.cliente || 'N/A',
           imagenes: row.imagenes
             ? (() => {
                 try {
@@ -99,12 +103,10 @@ export async function GET(request: NextRequest) {
       }),
     };
 
-    // Debugging: Log standardized data
     console.log('Datos estandarizados enviados (Barranquilla):', standardizedData);
-
     return NextResponse.json(standardizedData);
   } catch (error) {
     console.error('Error fetching novedades de Barranquilla:', error);
     return NextResponse.json({ error: 'Error al obtener datos de Barranquilla' }, { status: 500 });
   }
-}
+} 

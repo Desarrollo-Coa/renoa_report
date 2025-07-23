@@ -1,8 +1,7 @@
-import { NextResponse } from 'next/server';
+ import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { RowDataPacket } from 'mysql2/promise';
 
-// Define the interface for the database row
 interface NovedadRow extends RowDataPacket {
   id_novedad: number;
   consecutivo: string | number;
@@ -12,10 +11,11 @@ interface NovedadRow extends RowDataPacket {
   descripcion: string | null;
   gestion: string | null;
   critico: boolean;
-  imagenes: string | null; // GROUP_CONCAT result as a string
+  imagenes: string | null;
+  puesto: string;
+  cliente: string | null;
 }
 
-// Interface for the image objects after parsing
 interface Imagen {
   id_imagen: number;
   url_imagen: string;
@@ -34,7 +34,6 @@ export async function GET(request: Request) {
 
   try {
     const connection = await getConnection('Argos');
-    // Increase GROUP_CONCAT limit to handle long URLs
     await connection.execute('SET SESSION group_concat_max_len = 10000;');
 
     const [rows] = await connection.execute<NovedadRow[]>(`
@@ -47,6 +46,8 @@ export async function GET(request: Request) {
         n.descripcion, 
         n.gestion, 
         n.evento_critico AS critico,
+        s.nombre_sede AS puesto,
+        z.nombre_zona AS cliente,
         GROUP_CONCAT(
           JSON_OBJECT(
             'id_imagen', i.id_imagen,
@@ -58,6 +59,8 @@ export async function GET(request: Request) {
       FROM novedades_cementos_argos n
       JOIN users u ON n.id_usuario = u.id
       JOIN Tipos_Evento te ON n.id_tipo_evento = te.id_tipo_evento
+      JOIN Sedes s ON n.id_sede = s.id_sede
+      JOIN zonas_cementos_argos z ON s.id_zona = z.id_zona
       LEFT JOIN imagenes_novedades_cementos_argos i ON n.id_novedad = i.id_novedad
       WHERE DATE(n.fecha_hora_novedad) BETWEEN ? AND ?
       GROUP BY n.id_novedad
@@ -66,7 +69,6 @@ export async function GET(request: Request) {
 
     await connection.end();
 
-    // Debugging: Log raw database data
     console.log('Datos crudos de la base de datos (Cementos):', rows);
 
     const standardizedData = {
@@ -83,6 +85,8 @@ export async function GET(request: Request) {
           gestion: row.gestion || '',
           critico: row.critico || false,
           consecutivo: row.consecutivo,
+          puesto: row.puesto || 'N/A',
+          cliente: row.cliente || 'N/A',
           imagenes: row.imagenes
             ? (() => {
                 try {
@@ -99,12 +103,10 @@ export async function GET(request: Request) {
       }),
     };
 
-    // Debugging: Log standardized data
     console.log('Datos estandarizados enviados (Cementos):', standardizedData);
-
     return NextResponse.json(standardizedData);
   } catch (error) {
     console.error('Error fetching novedades de Cementos:', error);
     return NextResponse.json({ error: 'Error al obtener datos de Cementos' }, { status: 500 });
   }
-}
+} 

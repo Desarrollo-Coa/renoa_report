@@ -12,6 +12,8 @@ interface NovedadRow extends RowDataPacket {
   gestion: string | null;
   critico: boolean;
   imagenes: string | null;
+  puesto: string;
+  cliente: string | null; // nombre_negocio
 }
 
 interface Imagen {
@@ -43,6 +45,8 @@ export async function GET(request: Request) {
         n.descripcion, 
         n.gestion, 
         n.evento_critico AS critico,
+        p.nombre_puesto AS puesto,
+        neg.nombre_negocio AS cliente,
         GROUP_CONCAT(
           JSON_OBJECT(
             'id_imagen', i.id_imagen,
@@ -54,6 +58,9 @@ export async function GET(request: Request) {
       FROM novedades n
       JOIN users u ON n.id_usuario = u.id
       JOIN tipos_evento te ON n.id_tipo_evento = te.id_tipo_evento
+      JOIN puestos p ON n.id_puesto = p.id_puesto
+      JOIN unidades_negocio un ON p.id_unidad = un.id_unidad
+      JOIN negocios neg ON un.id_negocio = neg.id_negocio
       LEFT JOIN imagenes_novedades i ON n.id_novedad = i.id_novedad
       WHERE DATE(n.fecha_hora_novedad) BETWEEN ? AND ?
       GROUP BY n.id_novedad
@@ -61,7 +68,7 @@ export async function GET(request: Request) {
     `, [from, to]);
     await connection.end();
 
-    console.log("Datos crudos de la base de datos:", rows);
+    console.log("Datos crudos de la base de datos (Cartagena):", rows);
 
     const standardizedData = {
       data: (Array.isArray(rows) ? rows : []).map((row: NovedadRow) => {
@@ -77,6 +84,8 @@ export async function GET(request: Request) {
           gestion: row.gestion || "",
           critico: row.critico || false,
           consecutivo: row.consecutivo,
+          puesto: row.puesto || "N/A",
+          cliente: row.cliente || "N/A",
           imagenes: row.imagenes
             ? (() => {
                 try {
@@ -93,7 +102,7 @@ export async function GET(request: Request) {
       }),
     };
 
-    console.log("Datos estandarizados enviados:", standardizedData);
+    console.log("Datos estandarizados enviados (Cartagena):", standardizedData);
     return NextResponse.json(standardizedData);
   } catch (error) {
     console.error('Error fetching novedades de Cartagena:', error);

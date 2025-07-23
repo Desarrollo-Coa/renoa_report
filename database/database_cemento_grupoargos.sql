@@ -234,3 +234,33 @@ CREATE TABLE IF NOT EXISTS destinatarios_envio (
 );
  
  
+
+ 
+INSERT INTO unidad_negocio (nombre, descripcion) VALUES
+('Grupo Argos', 'Unidad de Negocio fotox'),
+('Baru', 'Unidad de Negocio fortox'),
+('Sator', 'Unidad de Negocio ');
+
+
+
+
+-- Insertar datos en tablas con dependencias
+INSERT INTO puestos_para_reportes (nombre_puesto, unidad_negocio_id) VALUES
+('SANTA ISABEL', 1),
+('MIRAMAR', 1),
+('JESUITA MIRAMAR', 1),
+('ARROYO LEON', 1),
+('INSIGNARES', 1),
+('MORRO', 1),
+('PAJONAL', 1),
+('MALLORQUÍN', 1),
+('LAS PAVAS', 1),
+('PAVAS CORPORATIVO', 1),
+('LAGOS DEL CACIQUE', 1),
+('LOS PARAGÚITAS - Baru', 2),
+('SATOR', 3),
+('BARU', 2),
+('LOTE VALLEDUPAR', 1),
+('SAN JUAN DE DIOS', 1),
+('REBOLO', 1),
+('Otros predios', NULL);
