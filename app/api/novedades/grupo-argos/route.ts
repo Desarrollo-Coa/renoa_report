@@ -77,6 +77,7 @@ export async function GET(request: Request) {
         imagenes: row.imagenes ? JSON.parse(`[${row.imagenes}]`) as Imagen[] : [], // Parsear como array de objetos Imagen
       })),
     };
+    console.log(standardizedData);
 
     return NextResponse.json(standardizedData);
   } catch (error) {

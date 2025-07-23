@@ -25,7 +25,7 @@ export default function Dashboard() {
       <Navbar />
       <main className="p-6 max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">CONSOLIDADO DE EVENTOS REGIONAL NORTE</h1>
         </div>
 
         <MetricsCards dateRange={dateRange} setDateRange={setDateRange} />

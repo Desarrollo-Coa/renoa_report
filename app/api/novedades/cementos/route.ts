@@ -69,7 +69,7 @@ export async function GET(request: Request) {
         imagenes: row.imagenes ? JSON.parse("[" + row.imagenes + "]") : [], // Parsear el GROUP_CONCAT como array de objetos
       })),
     };
-
+    console.log(standardizedData);
     return NextResponse.json(standardizedData);
   } catch (error) {
     console.error('Error fetching novedades de Cementos:', error);
