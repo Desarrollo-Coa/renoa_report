@@ -230,9 +230,7 @@ export function ChartsSection({ dateRange }: ChartsSectionProps) {
               </ResponsiveContainer>
             </div>
             <hr className="border-gray-200 mb-2" />
-            <div className="flex items-center text-sm text-gray-500">
-              <Clock className="h-4 w-4 mr-1" />Actualizado hace 2 min
-            </div>
+          
           </CardContent>
         </Card>
 
@@ -263,9 +261,7 @@ export function ChartsSection({ dateRange }: ChartsSectionProps) {
               </ResponsiveContainer>
             </div>
             <hr className="border-gray-200 mb-2" />
-            <div className="flex items-center text-sm text-gray-500">
-              <Clock className="h-4 w-4 mr-1" />Actualizado hace 4 min
-            </div>
+         
           </CardContent>
         </Card>
 
@@ -299,9 +295,7 @@ export function ChartsSection({ dateRange }: ChartsSectionProps) {
               </ResponsiveContainer>
             </div>
             <hr className="border-gray-200 mb-2" />
-            <div className="flex items-center text-sm text-gray-500">
-              <Clock className="h-4 w-4 mr-1" />Actualizado ahora
-            </div>
+          
           </CardContent>
         </Card>
       </div>

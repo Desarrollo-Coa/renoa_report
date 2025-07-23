@@ -1,7 +1,20 @@
-// next.config.js
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ["archivos-grupo-argos.nyc3.digitaloceanspaces.com"],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'archivos-grupo-argos.nyc3.digitaloceanspaces.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cloud-centralctg-ops-storage.nyc3.digitaloceanspaces.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 };
 

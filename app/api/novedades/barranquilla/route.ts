@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { RowDataPacket } from 'mysql2/promise';
 
-// Define el tipo de fila retornada por la consulta SQL
-interface NovedadRow {
+// Define the interface for the database row
+interface NovedadRow extends RowDataPacket {
   id_novedad: number;
   consecutivo: string | number;
   fecha: Date;
@@ -11,7 +12,15 @@ interface NovedadRow {
   descripcion: string | null;
   gestion: string | null;
   critico: boolean;
-  imagenes: string | null; // GROUP_CONCAT retorna una cadena
+  imagenes: string | null; // GROUP_CONCAT result as a string
+}
+
+// Interface for the image objects after parsing
+interface Imagen {
+  id_imagen: number;
+  url_imagen: string;
+  nombre_archivo: string;
+  fecha_subida: string;
 }
 
 export async function GET(request: NextRequest) {
@@ -25,11 +34,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const connection = await getConnection('barranquilla');
-    // Aumentar el límite de GROUP_CONCAT para manejar URLs largas
+    // Increase GROUP_CONCAT limit to handle long URLs
     await connection.execute('SET SESSION group_concat_max_len = 10000;');
 
-    const [rows] = await connection.execute(
-      `
+    const [rows] = await connection.execute<NovedadRow[]>(`
       SELECT 
         n.id_novedad, 
         n.consecutivo, 
@@ -54,27 +62,45 @@ export async function GET(request: NextRequest) {
       WHERE DATE(n.fecha_hora_novedad) BETWEEN ? AND ?
       GROUP BY n.id_novedad
       ORDER BY n.fecha_hora_novedad DESC
-      `,
-      [from, to]
-    ) as unknown as [NovedadRow[]];
+    `, [from, to]);
 
     await connection.end();
 
+    // Debugging: Log raw database data
+    console.log('Datos crudos de la base de datos (Barranquilla):', rows);
+
     const standardizedData = {
-      data: rows.map((row) => ({
-        id_novedad: row.id_novedad,
-        fecha: row.fecha instanceof Date ? row.fecha.toISOString().split('T')[0] : row.fecha,
-        tipo: row.tipo,
-        valor: 1,
-        proyecto: 'BARRANQUILLA',
-        usuario: row.usuario,
-        descripcion: row.descripcion || '',
-        gestion: row.gestion || '',
-        critico: row.critico || false,
-        consecutivo: row.consecutivo,
-        imagenes: row.imagenes ? JSON.parse(`[${row.imagenes}]`) : [],
-      })),
+      data: (Array.isArray(rows) ? rows : []).map((row) => {
+        console.log('Raw imagenes string for id_novedad:', row.id_novedad, row.imagenes);
+        return {
+          id_novedad: row.id_novedad,
+          fecha: row.fecha instanceof Date ? row.fecha.toISOString().split('T')[0] : row.fecha,
+          tipo: row.tipo,
+          valor: 1,
+          proyecto: 'BARRANQUILLA',
+          usuario: row.usuario,
+          descripcion: row.descripcion || '',
+          gestion: row.gestion || '',
+          critico: row.critico || false,
+          consecutivo: row.consecutivo,
+          imagenes: row.imagenes
+            ? (() => {
+                try {
+                  const parsed = JSON.parse(`[${row.imagenes}]`) as Imagen[];
+                  console.log('Parsed imagenes for id_novedad:', row.id_novedad, parsed);
+                  return parsed;
+                } catch (e) {
+                  console.error(`Error parsing imagenes for id_novedad ${row.id_novedad}:`, e);
+                  return [];
+                }
+              })()
+            : [],
+        };
+      }),
     };
+
+    // Debugging: Log standardized data
+    console.log('Datos estandarizados enviados (Barranquilla):', standardizedData);
 
     return NextResponse.json(standardizedData);
   } catch (error) {

@@ -32,9 +32,10 @@ export async function GET(request: Request) {
   }
 
   try {
-    const connection = await getConnection('Argos'); // Adjust if 'grupoArgos' is the correct database
-    // Aumentar el límite de GROUP_CONCAT para manejar URLs largas
+    const connection = await getConnection('Argos');
+    // Increase GROUP_CONCAT limit to handle long URLs
     await connection.execute('SET SESSION group_concat_max_len = 10000;');
+
     const [rows] = await connection.execute<NovedadRow[]>(`
       SELECT 
         n.id_novedad, 
@@ -60,24 +61,44 @@ export async function GET(request: Request) {
       GROUP BY n.id_novedad
       ORDER BY n.fecha_novedad DESC, n.hora_novedad DESC
     `, [from, to]);
+
     await connection.end();
 
+    // Debugging: Log raw database data
+    console.log('Datos crudos de la base de datos (Grupo Argos):', rows);
+
     const standardizedData = {
-      data: (Array.isArray(rows) ? rows : []).map((row: NovedadRow) => ({
-      id_novedad: row.id_novedad,
-        fecha: row.fecha.toISOString().split('T')[0], // Forzar solo YYYY-MM-DD
-        tipo: row.tipo,
-        valor: 1,
-        proyecto: "GRUPO ARGOS",
-        usuario: row.usuario,
-        descripcion: row.descripcion || "",
-        gestion: row.gestion || "",
-        critico: row.critico || false,
-        consecutivo: row.consecutivo,
-        imagenes: row.imagenes ? JSON.parse(`[${row.imagenes}]`) as Imagen[] : [], // Parsear como array de objetos Imagen
-      })),
+      data: (Array.isArray(rows) ? rows : []).map((row) => {
+        console.log('Raw imagenes string for id_novedad:', row.id_novedad, row.imagenes);
+        return {
+          id_novedad: row.id_novedad,
+          fecha: row.fecha instanceof Date ? row.fecha.toISOString().split('T')[0] : row.fecha,
+          tipo: row.tipo,
+          valor: 1,
+          proyecto: 'GRUPO ARGOS',
+          usuario: row.usuario,
+          descripcion: row.descripcion || '',
+          gestion: row.gestion || '',
+          critico: row.critico || false,
+          consecutivo: row.consecutivo,
+          imagenes: row.imagenes
+            ? (() => {
+                try {
+                  const parsed = JSON.parse(`[${row.imagenes}]`) as Imagen[];
+                  console.log('Parsed imagenes for id_novedad:', row.id_novedad, parsed);
+                  return parsed;
+                } catch (e) {
+                  console.error(`Error parsing imagenes for id_novedad ${row.id_novedad}:`, e);
+                  return [];
+                }
+              })()
+            : [],
+        };
+      }),
     };
-    console.log(standardizedData);
+
+    // Debugging: Log standardized data
+    console.log('Datos estandarizados enviados (Grupo Argos):', standardizedData);
 
     return NextResponse.json(standardizedData);
   } catch (error) {

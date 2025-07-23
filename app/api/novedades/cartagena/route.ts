@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { RowDataPacket } from 'mysql2/promise';
 
-// Define the interface for the database row
 interface NovedadRow extends RowDataPacket {
   id_novedad: number;
   consecutivo: string;
@@ -12,10 +11,9 @@ interface NovedadRow extends RowDataPacket {
   descripcion: string | null;
   gestion: string | null;
   critico: boolean;
-  imagenes: string | null; // GROUP_CONCAT result as a string
+  imagenes: string | null;
 }
 
-// Interface for the image objects after parsing
 interface Imagen {
   id_imagen: number;
   url_imagen: string;
@@ -34,7 +32,6 @@ export async function GET(request: Request) {
 
   try {
     const connection = await getConnection('cartagena');
-    // Aumentar el límite de GROUP_CONCAT para manejar URLs largas
     await connection.execute('SET SESSION group_concat_max_len = 10000;');
     const [rows] = await connection.execute<NovedadRow[]>(`
       SELECT 
@@ -64,28 +61,39 @@ export async function GET(request: Request) {
     `, [from, to]);
     await connection.end();
 
-    // Depuración: Imprimir los datos crudos de la base de datos
     console.log("Datos crudos de la base de datos:", rows);
 
     const standardizedData = {
-      data: (Array.isArray(rows) ? rows : []).map((row: NovedadRow) => ({
-                id_novedad: row.id_novedad,
-        fecha: row.fecha.toISOString().split('T')[0], // Forzar solo YYYY-MM-DD
-        tipo: row.tipo,
-        valor: 1,
-        proyecto: "CARTAGENA",
-        usuario: row.usuario,
-        descripcion: row.descripcion || "",
-        gestion: row.gestion || "",
-        critico: row.critico || false,
-        consecutivo: row.consecutivo,
-        imagenes: row.imagenes ? JSON.parse(`[${row.imagenes}]`) as Imagen[] : [], // Parsear como array de objetos Imagen
-      })),
+      data: (Array.isArray(rows) ? rows : []).map((row: NovedadRow) => {
+        console.log("Raw imagenes string for id_novedad:", row.id_novedad, row.imagenes);
+        return {
+          id_novedad: row.id_novedad,
+          fecha: row.fecha.toISOString().split('T')[0],
+          tipo: row.tipo,
+          valor: 1,
+          proyecto: "CARTAGENA",
+          usuario: row.usuario,
+          descripcion: row.descripcion || "",
+          gestion: row.gestion || "",
+          critico: row.critico || false,
+          consecutivo: row.consecutivo,
+          imagenes: row.imagenes
+            ? (() => {
+                try {
+                  const parsed = JSON.parse(`[${row.imagenes}]`) as Imagen[];
+                  console.log("Parsed imagenes for id_novedad:", row.id_novedad, parsed);
+                  return parsed;
+                } catch (e) {
+                  console.error(`Error parsing imagenes for id_novedad ${row.id_novedad}:`, e);
+                  return [];
+                }
+              })()
+            : [],
+        };
+      }),
     };
 
-    // Depuración: Imprimir los datos estandarizados antes de enviar
     console.log("Datos estandarizados enviados:", standardizedData);
-
     return NextResponse.json(standardizedData);
   } catch (error) {
     console.error('Error fetching novedades de Cartagena:', error);

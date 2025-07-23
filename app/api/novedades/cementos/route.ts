@@ -1,16 +1,26 @@
 import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
+import { RowDataPacket } from 'mysql2/promise';
 
-interface Row {
-  id_novedad: number | string;
+// Define the interface for the database row
+interface NovedadRow extends RowDataPacket {
+  id_novedad: number;
+  consecutivo: string | number;
   fecha: Date;
   tipo: string;
   usuario: string;
   descripcion: string | null;
   gestion: string | null;
-  critico: boolean | null;
-  consecutivo: number | string;
-  imagenes: string | null;
+  critico: boolean;
+  imagenes: string | null; // GROUP_CONCAT result as a string
+}
+
+// Interface for the image objects after parsing
+interface Imagen {
+  id_imagen: number;
+  url_imagen: string;
+  nombre_archivo: string;
+  fecha_subida: string;
 }
 
 export async function GET(request: Request) {
@@ -24,8 +34,10 @@ export async function GET(request: Request) {
 
   try {
     const connection = await getConnection('Argos');
-    // Aumentar el límite de GROUP_CONCAT para manejar URLs largas 
-    const [rows] = await connection.execute(`
+    // Increase GROUP_CONCAT limit to handle long URLs
+    await connection.execute('SET SESSION group_concat_max_len = 10000;');
+
+    const [rows] = await connection.execute<NovedadRow[]>(`
       SELECT 
         n.id_novedad, 
         n.consecutivo, 
@@ -51,25 +63,45 @@ export async function GET(request: Request) {
       GROUP BY n.id_novedad
       ORDER BY n.fecha_hora_novedad DESC
     `, [from, to]);
+
     await connection.end();
 
-    const standardizedData = {
-      data: (Array.isArray(rows) ? rows as Row[] : []).map((row) => ({
- id_novedad: row.id_novedad,
+    // Debugging: Log raw database data
+    console.log('Datos crudos de la base de datos (Cementos):', rows);
 
-        fecha: row.fecha.toISOString().split('T')[0], // Forzar solo YYYY-MM-DD
-        tipo: row.tipo,
-        valor: 1,
-        proyecto: "CEMENTOS",
-        usuario: row.usuario,
-        descripcion: row.descripcion || "",
-        gestion: row.gestion || "",
-        critico: row.critico || false,
-        consecutivo: row.consecutivo,
-        imagenes: row.imagenes ? JSON.parse("[" + row.imagenes + "]") : [], // Parsear el GROUP_CONCAT como array de objetos
-      })),
+    const standardizedData = {
+      data: (Array.isArray(rows) ? rows : []).map((row) => {
+        console.log('Raw imagenes string for id_novedad:', row.id_novedad, row.imagenes);
+        return {
+          id_novedad: row.id_novedad,
+          fecha: row.fecha instanceof Date ? row.fecha.toISOString().split('T')[0] : row.fecha,
+          tipo: row.tipo,
+          valor: 1,
+          proyecto: 'CEMENTOS',
+          usuario: row.usuario,
+          descripcion: row.descripcion || '',
+          gestion: row.gestion || '',
+          critico: row.critico || false,
+          consecutivo: row.consecutivo,
+          imagenes: row.imagenes
+            ? (() => {
+                try {
+                  const parsed = JSON.parse(`[${row.imagenes}]`) as Imagen[];
+                  console.log('Parsed imagenes for id_novedad:', row.id_novedad, parsed);
+                  return parsed;
+                } catch (e) {
+                  console.error(`Error parsing imagenes for id_novedad ${row.id_novedad}:`, e);
+                  return [];
+                }
+              })()
+            : [],
+        };
+      }),
     };
-    console.log(standardizedData);
+
+    // Debugging: Log standardized data
+    console.log('Datos estandarizados enviados (Cementos):', standardizedData);
+
     return NextResponse.json(standardizedData);
   } catch (error) {
     console.error('Error fetching novedades de Cementos:', error);
