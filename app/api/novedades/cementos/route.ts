@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 
 interface Row {
+  id_novedad: number | string;
   fecha: Date;
   tipo: string;
   usuario: string;
@@ -54,6 +55,8 @@ export async function GET(request: Request) {
 
     const standardizedData = {
       data: (Array.isArray(rows) ? rows as Row[] : []).map((row) => ({
+ id_novedad: row.id_novedad,
+
         fecha: row.fecha.toISOString().split('T')[0], // Forzar solo YYYY-MM-DD
         tipo: row.tipo,
         valor: 1,

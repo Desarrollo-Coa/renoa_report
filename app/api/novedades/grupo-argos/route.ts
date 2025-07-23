@@ -64,6 +64,7 @@ export async function GET(request: Request) {
 
     const standardizedData = {
       data: (Array.isArray(rows) ? rows : []).map((row: NovedadRow) => ({
+      id_novedad: row.id_novedad,
         fecha: row.fecha.toISOString().split('T')[0], // Forzar solo YYYY-MM-DD
         tipo: row.tipo,
         valor: 1,

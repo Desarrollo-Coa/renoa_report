@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+// next.config.js
+const nextConfig = {
+  images: {
+    domains: ["archivos-grupo-argos.nyc3.digitaloceanspaces.com"],
+  },
 };
 
 export default nextConfig;
