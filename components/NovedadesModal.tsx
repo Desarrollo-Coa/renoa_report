@@ -97,9 +97,8 @@ export function NovedadesModal({
                         .reverse()
                         .join("/")}
                     </p>
-                    <p>Usuario: {evento.usuario}</p>
-                    <p>Sede: {evento.puesto}</p>
-                    <p>Zona: {evento.cliente}</p>
+                     <p>Puesto: {evento.puesto}</p>
+                    <p>Cliente: {evento.cliente}</p>
                   </div>
                   <div className="prose max-w-none">
                     <p className="text-gray-700 text-base leading-relaxed">
