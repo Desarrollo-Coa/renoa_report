@@ -9,7 +9,8 @@ export interface Novedad {
   critico: boolean;
   consecutivo: string | number;
   proyecto: string;
-  valor: number;
+  puesto: string;
+  cliente: string;
   imagenes: {
     id_imagen?: number;
     id_archivo?: number;

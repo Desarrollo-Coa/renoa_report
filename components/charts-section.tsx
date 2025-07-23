@@ -22,14 +22,23 @@ interface Novedad {
   id_novedad: number;
   fecha: string;
   tipo: string;
-  valor: number;
-  proyecto: string;
   usuario: string;
   descripcion: string;
   gestion: string;
   critico: boolean;
-  consecutivo: number | string;
-  imagenes: { id_imagen?: number; id_archivo?: number; url_imagen?: string; url_archivo?: string; fecha_subida: string; nombre_archivo?: string }[];
+  consecutivo: string | number;
+  proyecto: string;
+  puesto: string;
+  cliente: string;
+  valor: number; 
+  imagenes: {
+    id_imagen?: number;
+    id_archivo?: number;
+    url_imagen?: string;
+    url_archivo?: string;
+    fecha_subida: string;
+    nombre_archivo?: string;
+  }[];
 }
 
 interface ProyectoData {

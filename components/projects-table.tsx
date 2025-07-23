@@ -8,19 +8,26 @@ import { Check, MoreHorizontal } from "lucide-react";
 import { NovedadesModal } from "@/components/NovedadesModal";
 import Image from "next/image";
 
-
 interface Novedad {
   id_novedad: number;
   fecha: string;
   tipo: string;
-  valor: number;
-  proyecto: string;
   usuario: string;
   descripcion: string;
   gestion: string;
   critico: boolean;
-  consecutivo: number | string;
-  imagenes: { id_imagen?: number; id_archivo?: number; url_imagen?: string; url_archivo?: string; fecha_subida: string; nombre_archivo?: string }[];
+  consecutivo: string | number;
+  proyecto: string;
+  puesto: string;
+  cliente: string;
+  imagenes: {
+    id_imagen?: number;
+    id_archivo?: number;
+    url_imagen?: string;
+    url_archivo?: string;
+    fecha_subida: string;
+    nombre_archivo?: string;
+  }[];
 }
 
 interface DateRange {
