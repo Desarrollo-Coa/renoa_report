@@ -1,0 +1,85 @@
+import { NextResponse } from 'next/server';
+import { getConnection } from '@/lib/db';
+import { RowDataPacket } from 'mysql2/promise';
+
+// Define the interface for the database row
+interface NovedadRow extends RowDataPacket {
+  id_novedad: number;
+  consecutivo: string;
+  fecha: Date;
+  tipo: string;
+  usuario: string;
+  descripcion: string | null;
+  gestion: string | null;
+  critico: boolean;
+  imagenes: string | null; // GROUP_CONCAT result as a string
+}
+
+// Interface for the image objects after parsing
+interface Imagen {
+  id_archivo: number;
+  url_archivo: string;
+  fecha_subida: string;
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const from = searchParams.get('from');
+  const to = searchParams.get('to');
+
+  if (!from || !to) {
+    return NextResponse.json({ error: 'Parámetros "from" y "to" son requeridos' }, { status: 400 });
+  }
+
+  try {
+    const connection = await getConnection('Argos'); // Adjust if 'grupoArgos' is the correct database
+    // Aumentar el límite de GROUP_CONCAT para manejar URLs largas
+    await connection.execute('SET SESSION group_concat_max_len = 10000;');
+    const [rows] = await connection.execute<NovedadRow[]>(`
+      SELECT 
+        n.id_novedad, 
+        n.consecutivo, 
+        DATE(n.fecha_novedad) AS fecha, 
+        tn.nombre_novedad AS tipo, 
+        CONCAT(u.nombre, ' ', u.apellido) AS usuario, 
+        n.descripcion, 
+        n.gestion, 
+        n.estado = 'no_enviado' AS critico,
+        GROUP_CONCAT(
+          JSON_OBJECT(
+            'id_archivo', a.id_archivo,
+            'url_archivo', a.url_archivo,
+            'fecha_subida', a.fecha_subida
+          )
+        ) AS imagenes
+      FROM novedades n
+      JOIN users u ON n.operador_registro_id = u.id
+      JOIN tipos_novedad tn ON n.id_tipo_novedad = tn.id_tipo_novedad
+      LEFT JOIN archivos_novedad a ON n.id_novedad = a.id_novedad
+      WHERE DATE(n.fecha_novedad) BETWEEN ? AND ?
+      GROUP BY n.id_novedad
+      ORDER BY n.fecha_novedad DESC, n.hora_novedad DESC
+    `, [from, to]);
+    await connection.end();
+
+    const standardizedData = {
+      data: (Array.isArray(rows) ? rows : []).map((row: NovedadRow) => ({
+        fecha: row.fecha.toISOString().split('T')[0], // Forzar solo YYYY-MM-DD
+        tipo: row.tipo,
+        valor: 1,
+        proyecto: "GRUPO ARGOS",
+        usuario: row.usuario,
+        descripcion: row.descripcion || "",
+        gestion: row.gestion || "",
+        critico: row.critico || false,
+        consecutivo: row.consecutivo,
+        imagenes: row.imagenes ? JSON.parse(`[${row.imagenes}]`) as Imagen[] : [], // Parsear como array de objetos Imagen
+      })),
+    };
+
+    return NextResponse.json(standardizedData);
+  } catch (error) {
+    console.error('Error fetching novedades de Grupo Argos:', error);
+    return NextResponse.json({ error: 'Error al obtener datos de Grupo Argos' }, { status: 500 });
+  }
+}
