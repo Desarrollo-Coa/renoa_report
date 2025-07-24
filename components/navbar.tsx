@@ -4,7 +4,7 @@ import * as Popover from "@radix-ui/react-popover"
 import Image from "next/image"
 
 const proyectos = [
-  { nombre: "CENTRAL DE OPERACIONES COSTA", logo: "/img/BARRANQUILLA.jpeg", url: null }, // Actual
+  { nombre: "CENTRAL DE OPERACIONES COSTA", logo: "/img/COC.jpeg", url: null }, // Actual
   { nombre: "BARRANQUILLA", logo: "/img/BARRANQUILLA.jpeg", url: "https://op-central-barranquilla.vercel.app" },
   { nombre: "CARTAGENA", logo: "/img/CARTAGENA.jpeg", url: "https://op-central-ctg.vercel.app" },
   { nombre: "GRUPO ARGOS", logo: "/img/GA.jpeg", url: "https://crm-coa.vercel.app" },
