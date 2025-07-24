@@ -1,24 +1,23 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Navbar } from "@/components/navbar"
-import { MetricsCards } from "@/components/metrics-cards"
-import { ChartsSection } from "@/components/charts-section"
-import { ProjectsTable } from "@/components/projects-table"
-import { OrdersOverview } from "@/components/orders-overview"
- 
+import { useState } from "react";
+import { Navbar } from "@/components/navbar";
+import { MetricsCards } from "@/components/metrics-cards";
+import { ChartsSection } from "@/components/charts-section";
+import { ProjectsTable } from "@/components/projects-table";
+import { OrdersOverview } from "@/components/orders-overview";
 
 function getDefaultRange() {
-  const today = new Date()
-  const to = today.toISOString().slice(0, 10)
-  const fromDate = new Date(today)
-  fromDate.setDate(fromDate.getDate() - 7)
-  const from = fromDate.toISOString().slice(0, 10)
-  return { from, to }
+  const today = new Date();
+  const to = today.toISOString().slice(0, 10);
+  const fromDate = new Date(today);
+  fromDate.setDate(fromDate.getDate() - 7);
+  const from = fromDate.toISOString().slice(0, 10);
+  return { from, to };
 }
 
 export default function Dashboard() {
-  const [dateRange, setDateRange] = useState(getDefaultRange())
+  const [dateRange, setDateRange] = useState(getDefaultRange());
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -30,15 +29,15 @@ export default function Dashboard() {
 
         <MetricsCards dateRange={dateRange} setDateRange={setDateRange} />
         <ChartsSection dateRange={dateRange} />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
           <div className="lg:col-span-2">
             <ProjectsTable dateRange={dateRange} />
           </div>
-          <div>
+          <div className="lg:col-span-3">
             <OrdersOverview dateRange={dateRange} />
           </div>
         </div>
       </main>
     </div>
-  )
+  );
 }

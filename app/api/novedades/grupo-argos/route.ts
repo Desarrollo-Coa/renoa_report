@@ -13,6 +13,8 @@ interface NovedadRow extends RowDataPacket {
   gestion: string | null;
   critico: boolean;
   imagenes: string | null; // GROUP_CONCAT result as a string
+  cliente: string; // From unidad_negocio.nombre via puestos_para_reportes
+  puesto: string; // From puestos_para_reportes.nombre_puesto
 }
 
 // Interface for the image objects after parsing
@@ -46,6 +48,8 @@ export async function GET(request: Request) {
         n.descripcion, 
         n.gestion, 
         n.estado = 'no_enviado' AS critico,
+        un.nombre AS cliente,
+        ppr.nombre_puesto AS puesto,
         GROUP_CONCAT(
           JSON_OBJECT(
             'id_archivo', a.id_archivo,
@@ -56,6 +60,8 @@ export async function GET(request: Request) {
       FROM novedades n
       JOIN users u ON n.operador_registro_id = u.id
       JOIN tipos_novedad tn ON n.id_tipo_novedad = tn.id_tipo_novedad
+      LEFT JOIN puestos_para_reportes ppr ON n.id_puesto = ppr.id_puesto
+      LEFT JOIN unidad_negocio un ON ppr.unidad_negocio_id = un.id
       LEFT JOIN archivos_novedad a ON n.id_novedad = a.id_novedad
       WHERE DATE(n.fecha_novedad) BETWEEN ? AND ?
       GROUP BY n.id_novedad
@@ -81,6 +87,8 @@ export async function GET(request: Request) {
           gestion: row.gestion || '',
           critico: row.critico || false,
           consecutivo: row.consecutivo,
+          puesto: row.puesto || 'N/A',
+          cliente: row.cliente || 'N/A',
           imagenes: row.imagenes
             ? (() => {
                 try {

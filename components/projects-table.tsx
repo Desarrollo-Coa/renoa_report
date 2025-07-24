@@ -175,12 +175,12 @@ export function ProjectsTable({ dateRange }: ProjectsTableProps) {
                   <th className="text-left py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Proyecto
                   </th>
-                  <th className="text-left py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  {/* <th className="text-center py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Negocios
                   </th>
                   <th className="text-center py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Cantidad de Novedades
-                  </th>
+                  </th> */}
                   <th className="text-center py-3 px-6 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Porcentaje
                   </th>
@@ -192,7 +192,7 @@ export function ProjectsTable({ dateRange }: ProjectsTableProps) {
                     key={index}
                     className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
                     onClick={() => handleRowClick(project.proyecto)}
-                     >
+                  >
                     <td className="py-4 px-6">
                       <div className="flex items-center">
                         <Image
@@ -202,11 +202,10 @@ export function ProjectsTable({ dateRange }: ProjectsTableProps) {
                           height={32}
                           className="w-8 h-8 rounded-full mr-3"
                         />
-
                         <span className="font-medium text-gray-900">{project.proyecto}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6">
+                    {/* <td className="py-4 px-6">
                       <div className="flex -space-x-2">
                         {project.negocios.slice(0, 4).map((negocio, negocioIndex) => (
                           <Avatar key={negocioIndex} className="w-8 h-8 border-2 border-white">
@@ -222,7 +221,7 @@ export function ProjectsTable({ dateRange }: ProjectsTableProps) {
                       >
                         {project.cantidadEventos}
                       </span>
-                    </td>
+                    </td> */}
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-center">
                         <div className="w-24">
