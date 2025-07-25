@@ -44,14 +44,7 @@ interface Project {
 
 interface ProjectsTableProps {
   dateRange: DateRange;
-}
-
-const getEventColor = (eventCount: number): string => {
-  if (eventCount >= 7) return "text-red-900";
-  if (eventCount >= 5) return "text-red-700";
-  if (eventCount >= 3) return "text-red-500";
-  return "text-red-300";
-};
+} 
 
 export function ProjectsTable({ dateRange }: ProjectsTableProps) {
   const [projectsData, setProjectsData] = useState<Project[]>([]);
