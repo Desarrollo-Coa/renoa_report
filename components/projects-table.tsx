@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Check, MoreHorizontal } from "lucide-react";
 import { NovedadesModal } from "@/components/NovedadesModal";
