@@ -173,48 +173,83 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
 
   return (
     <div className="space-y-6">
-      {/* Métricas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {metrics.map((metric, index) => {
-          const Icon = metric.icon;
-          return (
-            <Card key={index} className="bg-white shadow-sm">
-              <CardContent className="p-5">
-                <div className="flex flex-col h-full">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className={`p-2 rounded-lg ${metric.bgColor}`}>
+      <Card className="bg-white shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg font-semibold">Información de Ausencias</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Métricas principales */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {metrics.map((metric, index) => {
+              const Icon = metric.icon;
+              return (
+                <div key={index} className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className={`p-1.5 rounded-lg ${metric.bgColor}`}>
                       <Icon className={`h-4 w-4 ${metric.color}`} />
                     </div>
                   </div>
                   <div className="flex-1">
-                    <p className="text-2xl font-bold text-gray-900 mb-2">{metric.value}</p>
+                    <p className="text-xl font-bold text-gray-900 mb-1">{metric.value}</p>
                     <p className="text-xs font-medium text-gray-600 mb-1 leading-tight" style={lineClampStyle}>{metric.title}</p>
                     <p className="text-xs text-gray-500 leading-tight" style={lineClampStyle}>{metric.description}</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
 
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Gráfico de tipos de ausencia */}
-        <Card className="bg-white shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-semibold">Distribución por tipo de ausencia</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {Object.keys(ausenciasPorTipo).length > 0 ? (
-              <div className="space-y-3">
-                {Object.entries(ausenciasPorTipo)
-                  .sort(([,a], [,b]) => b - a) // Ordenar por cantidad descendente
-                  .map(([tipo, count], index) => (
-                    <div key={tipo} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">{tipo}</span>
+          {/* Gráficos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Gráfico de tipos de ausencia */}
+            <div className="bg-gray-50 rounded-lg p-3">
+              <h3 className="text-base font-semibold mb-3">Distribución por tipo de ausencia</h3>
+              {Object.keys(ausenciasPorTipo).length > 0 ? (
+                <div className="space-y-2">
+                  {Object.entries(ausenciasPorTipo)
+                    .sort(([,a], [,b]) => b - a) // Ordenar por cantidad descendente
+                    .map(([tipo, count], index) => (
+                      <div key={tipo} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">{tipo}</span>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-20 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="h-2 rounded-full transition-all duration-300"
+                              style={{ 
+                                width: count > 0 ? `${(count / totalAusencias) * 100}%` : '0%',
+                                backgroundColor: count > 0 ? getColorByIndex(index) : '#d1d5db'
+                              }}
+                            ></div>
+                          </div>
+                          <span className={`text-sm font-medium ${count > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
+                            {count}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-500">No hay datos de ausencias para mostrar</p>
+              )}
+            </div>
+
+            {/* Gráfico de proyectos */}
+            <div className="bg-gray-50 rounded-lg p-3">
+              <h3 className="text-base font-semibold mb-3">Ausencias por proyecto</h3>
+              <div className="space-y-2">
+                {Object.entries(ausenciasPorProyecto)
+                  .sort(([a], [b]) => a.localeCompare(b)) // Ordenar alfabéticamente
+                  .map(([proyecto, count], index) => (
+                    <div 
+                      key={proyecto} 
+                      className={`flex items-center justify-between p-1.5 rounded-lg transition-colors ${
+                        count > 0 ? 'cursor-pointer hover:bg-gray-50' : 'opacity-60'
+                      }`}
+                      onClick={() => count > 0 ? handleProyectoClick(proyecto) : null}
+                    >
+                      <span className={`text-sm ${count > 0 ? 'text-gray-600' : 'text-gray-400'}`}>{proyecto}</span>
                       <div className="flex items-center space-x-2">
-                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                        <div className="w-20 bg-gray-200 rounded-full h-2">
                           <div 
                             className="h-2 rounded-full transition-all duration-300"
                             style={{ 
@@ -230,52 +265,10 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
                     </div>
                   ))}
               </div>
-            ) : (
-              <p className="text-center text-gray-500">No hay datos de ausencias para mostrar</p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Gráfico de proyectos */}
-        <Card className="bg-white shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-semibold">Ausencias por proyecto</CardTitle>
-          </CardHeader>
-          <CardContent>
-              <div className="space-y-3">
-              {Object.entries(ausenciasPorProyecto)
-                .sort(([a], [b]) => a.localeCompare(b)) // Ordenar alfabéticamente
-                .map(([proyecto, count], index) => (
-                  <div 
-                    key={proyecto} 
-                    className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
-                      count > 0 ? 'cursor-pointer hover:bg-gray-50' : 'opacity-60'
-                    }`}
-                    onClick={() => count > 0 ? handleProyectoClick(proyecto) : null}
-                  >
-                    <span className={`text-sm ${count > 0 ? 'text-gray-600' : 'text-gray-400'}`}>{proyecto}</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="h-2 rounded-full transition-all duration-300"
-                          style={{ 
-                            width: count > 0 ? `${(count / totalAusencias) * 100}%` : '0%',
-                            backgroundColor: count > 0 ? getColorByIndex(index) : '#d1d5db'
-                          }}
-                        ></div>
-                      </div>
-                      <span className={`text-sm font-medium ${count > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {count}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-          </CardContent>
-        </Card>
-      </div>
-
-
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Modal para mostrar todas las ausencias */}
       <AusenciasModal
