@@ -78,7 +78,7 @@ export function DataProvider({ children, initialDateRange }: DataProviderProps) 
   const [tiposAusencia, setTiposAusencia] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [_dateRange, setDateRange] = useState(initialDateRange);
+  const [, setDateRange] = useState(initialDateRange);
 
   const fetchAllData = async (range: DateRange) => {
     setLoading(true);

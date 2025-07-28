@@ -44,10 +44,10 @@ function DashboardContent() {
         <ChartsSection dateRange={dateRange} />
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
           <div className="lg:col-span-2">
-            <ProjectsTable dateRange={dateRange} />
+            <ProjectsTable />
           </div>
           <div className="lg:col-span-3">
-            <AusenciasOverview dateRange={dateRange} />
+            <AusenciasOverview />
           </div>
         </div>
       </main>

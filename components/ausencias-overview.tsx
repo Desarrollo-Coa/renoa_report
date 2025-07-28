@@ -34,17 +34,8 @@ const lineClampStyle = {
   overflow: 'hidden',
   textOverflow: 'ellipsis' as const,
 };
-
-interface DateRange {
-  from: string;
-  to: string;
-}
-
-interface AusenciasOverviewProps {
-  dateRange: DateRange;
-}
-
-export function AusenciasOverview({ dateRange: _dateRange }: AusenciasOverviewProps) {
+ 
+export function AusenciasOverview() {
   const { ausencias, totalAusencias, promedioDiasAusencia, tiposAusencia } = useData();
   const [modalOpen, setModalOpen] = useState(false);
   const [clienteModalOpen, setClienteModalOpen] = useState(false);

@@ -43,17 +43,9 @@ const getProjectLogo = (proyecto: string): string => {
       return "/img/globe.svg";
   }
 };
+ 
 
-interface DateRange {
-  from: string;
-  to: string;
-}
-
-interface ProjectsTableProps {
-  dateRange: DateRange;
-} 
-
-export function ProjectsTable({ dateRange: _dateRange }: ProjectsTableProps) {
+export function ProjectsTable() {
   const { novedades } = useData();
   const [showModal, setShowModal] = useState(false);
   const [eventosSeleccionados, setEventosSeleccionados] = useState<typeof novedades>([]);
