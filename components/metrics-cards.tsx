@@ -84,9 +84,16 @@ export function MetricsCards({ dateRange, setDateRange }: MetricsCardsProps) {
     (new Date(dateRange.to).setHours(23, 59, 59, 999) - new Date(dateRange.from).setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24)
   ) + 1
 
-   const diaConMayorNovedad = novedades.length > 0 ? [...new Set(novedades.map(nov => nov.fecha))].reduce((maxDia, dia) =>
-    novedades.filter(nov => nov.fecha === dia).length > novedades.filter(nov => nov.fecha === maxDia).length ? dia : maxDia
-  ) : "Ninguno"
+   const diaConMayorNovedad = novedades.length > 0 ? (() => {
+    const fechasUnicas = [...new Set(novedades.map(nov => nov.fecha))];
+    const maxDia = fechasUnicas.reduce((maxDia, dia) => {
+      const countDia = novedades.filter(nov => nov.fecha === dia).length;
+      const countMaxDia = novedades.filter(nov => nov.fecha === maxDia).length;
+      return countDia > countMaxDia ? dia : maxDia;
+    });
+    const cantidad = novedades.filter(nov => nov.fecha === maxDia).length;
+    return `${maxDia} (${cantidad})`;
+  })() : "Ninguno"
 
   const noveltyCount = novedades.reduce<Record<string, number>>((acc, nov) => {
     acc[nov.tipo] = (acc[nov.tipo] || 0) + 1
