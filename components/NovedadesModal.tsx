@@ -53,7 +53,7 @@ export function NovedadesModal({
         </DialogHeader>
         <div className="space-y-6 sm:space-y-8">
           {eventosSeleccionados.map((evento) => (
-            <Card key={evento.id_novedad} className="overflow-hidden shadow-lg">
+            <Card key={`${evento.proyecto}-${evento.id_novedad}`} className="overflow-hidden shadow-lg">
               <div className="p-4 sm:p-6">
                 <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
                   {evento.proyecto} - {evento.tipo}

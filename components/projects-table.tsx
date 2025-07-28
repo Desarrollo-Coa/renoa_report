@@ -7,6 +7,27 @@ import { Check, MoreHorizontal } from "lucide-react";
 import { NovedadesModal } from "@/components/NovedadesModal";
 import Image from "next/image";
 
+// Paleta de colores para las barras de progreso
+const colorPalette = [
+  '#3b82f6', // blue-500
+  '#10b981', // emerald-500
+  '#f59e0b', // amber-500
+  '#ef4444', // red-500
+  '#8b5cf6', // violet-500
+  '#06b6d4', // cyan-500
+  '#84cc16', // lime-500
+  '#f97316', // orange-500
+  '#ec4899', // pink-500
+  '#6366f1', // indigo-500
+  '#14b8a6', // teal-500
+  '#f43f5e', // rose-500
+];
+
+// Función para obtener color por índice
+const getColorByIndex = (index: number): string => {
+  return colorPalette[index % colorPalette.length];
+};
+
 interface Novedad {
   id_novedad: number;
   fecha: string;
@@ -181,7 +202,7 @@ export function ProjectsTable({ dateRange }: ProjectsTableProps) {
               <tbody>
                 {projectsData.map((project, index) => (
                   <tr
-                    key={index}
+                    key={project.proyecto}
                     className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
                     onClick={() => handleRowClick(project.proyecto)}
                   >
@@ -220,7 +241,15 @@ export function ProjectsTable({ dateRange }: ProjectsTableProps) {
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-semibold text-gray-900">{project.porcentaje.toFixed(2)}%</span>
                           </div>
-                          <Progress value={project.porcentaje} className="h-2" />
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="h-2 rounded-full transition-all duration-300"
+                              style={{ 
+                                width: `${project.porcentaje}%`,
+                                backgroundColor: getColorByIndex(index)
+                              }}
+                            ></div>
+                          </div>
                         </div>
                       </div>
                     </td>

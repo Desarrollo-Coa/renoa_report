@@ -4,6 +4,27 @@ import { Users, Clock } from "lucide-react";
 import { AusenciasModal } from "./AusenciasModal";
 import { AusenciasPorPuestoModal } from "./AusenciasPorPuestoModal";
 
+// Paleta de colores para las barras de progreso
+const colorPalette = [
+  '#3b82f6', // blue-500
+  '#10b981', // emerald-500
+  '#f59e0b', // amber-500
+  '#ef4444', // red-500
+  '#8b5cf6', // violet-500
+  '#06b6d4', // cyan-500
+  '#84cc16', // lime-500
+  '#f97316', // orange-500
+  '#ec4899', // pink-500
+  '#6366f1', // indigo-500
+  '#14b8a6', // teal-500
+  '#f43f5e', // rose-500
+];
+
+// Función para obtener color por índice
+const getColorByIndex = (index: number): string => {
+  return colorPalette[index % colorPalette.length];
+};
+
 // Estilos para line-clamp
 const lineClampStyle = {
   display: '-webkit-box',
@@ -189,16 +210,17 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
               <div className="space-y-3">
                 {Object.entries(ausenciasPorTipo)
                   .sort(([,a], [,b]) => b - a) // Ordenar por cantidad descendente
-                  .map(([tipo, count]) => (
+                  .map(([tipo, count], index) => (
                     <div key={tipo} className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">{tipo}</span>
                       <div className="flex items-center space-x-2">
                         <div className="w-24 bg-gray-200 rounded-full h-2">
                           <div 
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                              count > 0 ? 'bg-blue-600' : 'bg-gray-300'
-                            }`}
-                            style={{ width: count > 0 ? `${(count / totalAusencias) * 100}%` : '0%' }}
+                            className="h-2 rounded-full transition-all duration-300"
+                            style={{ 
+                              width: count > 0 ? `${(count / totalAusencias) * 100}%` : '0%',
+                              backgroundColor: count > 0 ? getColorByIndex(index) : '#d1d5db'
+                            }}
                           ></div>
                         </div>
                         <span className={`text-sm font-medium ${count > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
@@ -223,7 +245,7 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
             <div className="space-y-3">
               {Object.entries(ausenciasPorProyecto)
                 .sort(([a], [b]) => a.localeCompare(b)) // Ordenar alfabéticamente
-                .map(([proyecto, count]) => (
+                .map(([proyecto, count], index) => (
                   <div 
                     key={proyecto} 
                     className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
@@ -235,10 +257,11 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
                     <div className="flex items-center space-x-2">
                       <div className="w-24 bg-gray-200 rounded-full h-2">
                         <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            count > 0 ? 'bg-green-600' : 'bg-gray-300'
-                          }`}
-                          style={{ width: count > 0 ? `${(count / totalAusencias) * 100}%` : '0%' }}
+                          className="h-2 rounded-full transition-all duration-300"
+                          style={{ 
+                            width: count > 0 ? `${(count / totalAusencias) * 100}%` : '0%',
+                            backgroundColor: count > 0 ? getColorByIndex(index) : '#d1d5db'
+                          }}
                         ></div>
                       </div>
                       <span className={`text-sm font-medium ${count > 0 ? 'text-gray-900' : 'text-gray-400'}`}>

@@ -15,8 +15,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
   LineChart,
   Line,
   TooltipProps,
+  Cell,
 } from "recharts";
 import { NovedadesModal } from "./NovedadesModal";
+
+// Paleta de colores para los gráficos
+const colorPalette = [
+  '#3b82f6', // blue-500
+  '#10b981', // emerald-500
+  '#f59e0b', // amber-500
+  '#ef4444', // red-500
+  '#8b5cf6', // violet-500
+  '#06b6d4', // cyan-500
+  '#84cc16', // lime-500
+  '#f97316', // orange-500
+  '#ec4899', // pink-500
+  '#6366f1', // indigo-500
+  '#14b8a6', // teal-500
+  '#f43f5e', // rose-500
+];
+
+// Función para obtener color por índice
+const getColorByIndex = (index: number): string => {
+  return colorPalette[index % colorPalette.length];
+};
 
 interface Novedad {
   id_novedad: number;
@@ -231,8 +253,11 @@ export function ChartsSection({ dateRange }: ChartsSectionProps) {
                   <YAxis dataKey="proyecto" type="category" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: "#6b7280" }} width={100} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Bar dataKey="cantidad" fill="#3b82f6" radius={[0, 4, 4, 0]} animationDuration={1000}>
+                  <Bar dataKey="cantidad" radius={[0, 4, 4, 0]} animationDuration={1000}>
                     <LabelList dataKey="cantidad" position="right" fontSize={12} fill="#374151" angle={0} />
+                    {dataPorProyecto.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getColorByIndex(index)} />
+                    ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -296,8 +321,11 @@ export function ChartsSection({ dateRange }: ChartsSectionProps) {
                   <YAxis type="number" allowDecimals={false} fontSize={12} tickLine={false} axisLine={false} tick={{ fill: "#6b7280" }} domain={[0, Math.ceil(maxTipo)]} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Bar dataKey="cantidad" fill="#8b5cf6" radius={[4, 4, 0, 0]} animationDuration={1000}>
+                  <Bar dataKey="cantidad" radius={[4, 4, 0, 0]} animationDuration={1000}>
                     <LabelList dataKey="cantidad" position="top" fontSize={12} fill="#374151" angle={0} />
+                    {dataPorTipo.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={getColorByIndex(index)} />
+                    ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
