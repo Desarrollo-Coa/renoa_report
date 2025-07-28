@@ -65,24 +65,29 @@ export function NovedadesModal({
                 {evento.imagenes && evento.imagenes.length > 0 && (
                   <div className="mb-6">
                     <div className="flex gap-4 overflow-x-auto pb-4">
-                      {evento.imagenes.map((imagen, idx) => {
-                        const imageUrl = imagen.url_imagen || imagen.url_archivo || "https://via.placeholder.com/150";
-                        return (
-                          <div
-                            key={imagen.id_imagen || imagen.id_archivo || idx}
-                            className="relative flex-shrink-0 w-32 h-32 sm:w-48 sm:h-48"
-                          >
-                            <Image
-                              src={imageUrl}
-                              alt={imagen.nombre_archivo || `Imagen ${idx + 1}`}
-                              fill
-                              className="rounded-lg object-cover"
-                              sizes="(max-width: 640px) 128px, 192px"
-                              priority={idx === 0}
-                            />
-                          </div>
-                        );
-                      })}
+                      {evento.imagenes
+                        .filter(imagen => {
+                          const imageUrl = imagen.url_imagen || imagen.url_archivo;
+                          return imageUrl && imageUrl.trim() !== '';
+                        })
+                        .map((imagen, idx) => {
+                          const imageUrl = (imagen.url_imagen || imagen.url_archivo) as string;
+                          return (
+                            <div
+                              key={imagen.id_imagen || imagen.id_archivo || idx}
+                              className="relative flex-shrink-0 w-32 h-32 sm:w-48 sm:h-48"
+                            >
+                              <Image
+                                src={imageUrl}
+                                alt={imagen.nombre_archivo || `Imagen ${idx + 1}`}
+                                fill
+                                className="rounded-lg object-cover"
+                                sizes="(max-width: 640px) 128px, 192px"
+                                priority={idx === 0}
+                              />
+                            </div>
+                          );
+                        })}
                     </div>
                   </div>
                 )}
