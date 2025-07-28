@@ -304,7 +304,7 @@ export function ChartsSection({ dateRange }: ChartsSectionProps) {
             <p className="text-sm text-gray-500">Distribución por tipo de evento</p>
           </CardHeader>
           <CardContent className="px-6 pb-6">
-            <div className="h-48 mb-4">
+            <div className="h-56 mb-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={dataPorTipo}
@@ -317,7 +317,7 @@ export function ChartsSection({ dateRange }: ChartsSectionProps) {
                   }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="tipo" type="category" fontSize={12} tickLine={false} axisLine={false} tick={{ fill: "#6b7280" }} angle={-45} textAnchor="end" height={50} />
+                  <XAxis dataKey="tipo" type="category" fontSize={10} tickLine={false} axisLine={false} tick={{ fill: "#6b7280" }} angle={-45} textAnchor="end" height={80} />
                   <YAxis type="number" allowDecimals={false} fontSize={12} tickLine={false} axisLine={false} tick={{ fill: "#6b7280" }} domain={[0, Math.ceil(maxTipo)]} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
