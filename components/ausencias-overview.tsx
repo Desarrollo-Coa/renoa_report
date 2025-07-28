@@ -112,6 +112,14 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
     return acc;
   }, {});
 
+  // Asegurar que todos los proyectos aparezcan, incluso con 0 ausencias
+  const proyectosDisponibles = ['BARRANQUILLA', 'CARTAGENA'];
+  proyectosDisponibles.forEach(proyecto => {
+    if (!ausenciasPorProyecto[proyecto]) {
+      ausenciasPorProyecto[proyecto] = 0;
+    }
+  });
+
   const promedioDiasAusencia = totalAusencias > 0 ? (totalDiasAusencia / totalAusencias).toFixed(1) : "0";
 
   const handleProyectoClick = (proyecto: string) => {
@@ -212,30 +220,34 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
             <CardTitle className="text-lg font-semibold">Ausencias por proyecto</CardTitle>
           </CardHeader>
           <CardContent>
-            {Object.keys(ausenciasPorProyecto).length > 0 ? (
-              <div className="space-y-3">
-                {Object.entries(ausenciasPorProyecto).map(([proyecto, count]) => (
+            <div className="space-y-3">
+              {Object.entries(ausenciasPorProyecto)
+                .sort(([a], [b]) => a.localeCompare(b)) // Ordenar alfabéticamente
+                .map(([proyecto, count]) => (
                   <div 
                     key={proyecto} 
-                    className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
-                    onClick={() => handleProyectoClick(proyecto)}
+                    className={`flex items-center justify-between p-2 rounded-lg transition-colors ${
+                      count > 0 ? 'cursor-pointer hover:bg-gray-50' : 'opacity-60'
+                    }`}
+                    onClick={() => count > 0 ? handleProyectoClick(proyecto) : null}
                   >
-                    <span className="text-sm text-gray-600">{proyecto}</span>
+                    <span className={`text-sm ${count > 0 ? 'text-gray-600' : 'text-gray-400'}`}>{proyecto}</span>
                     <div className="flex items-center space-x-2">
                       <div className="w-24 bg-gray-200 rounded-full h-2">
                         <div 
-                          className="bg-green-600 h-2 rounded-full" 
-                          style={{ width: `${(count / totalAusencias) * 100}%` }}
+                          className={`h-2 rounded-full transition-all duration-300 ${
+                            count > 0 ? 'bg-green-600' : 'bg-gray-300'
+                          }`}
+                          style={{ width: count > 0 ? `${(count / totalAusencias) * 100}%` : '0%' }}
                         ></div>
                       </div>
-                      <span className="text-sm font-medium text-gray-900">{count}</span>
+                      <span className={`text-sm font-medium ${count > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {count}
+                      </span>
                     </div>
                   </div>
                 ))}
-              </div>
-            ) : (
-              <p className="text-center text-gray-500">No hay datos de proyectos para mostrar</p>
-            )}
+            </div>
           </CardContent>
         </Card>
       </div>
