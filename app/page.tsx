@@ -5,7 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { MetricsCards } from "@/components/metrics-cards";
 import { ChartsSection } from "@/components/charts-section";
 import { ProjectsTable } from "@/components/projects-table";
-import { OrdersOverview } from "@/components/orders-overview";
+import { AusenciasOverview } from "@/components/ausencias-overview";
 
 function getDefaultRange() {
   const today = new Date();
@@ -24,7 +24,7 @@ export default function Dashboard() {
       <Navbar />
       <main className="p-6 max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">CONSOLIDADO DE EVENTOS REGIONAL NORTE</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">CONSOLIDADO DE EVENTOS Y AUSENCIAS REGIONAL NORTE</h1>
         </div>
 
         <MetricsCards dateRange={dateRange} setDateRange={setDateRange} />
@@ -34,7 +34,7 @@ export default function Dashboard() {
             <ProjectsTable dateRange={dateRange} />
           </div>
           <div className="lg:col-span-3">
-            <OrdersOverview dateRange={dateRange} />
+            <AusenciasOverview dateRange={dateRange} />
           </div>
         </div>
       </main>

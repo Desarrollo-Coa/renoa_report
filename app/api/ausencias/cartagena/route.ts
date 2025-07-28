@@ -1,0 +1,84 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getConnection } from '@/lib/db';
+import { RowDataPacket } from 'mysql2/promise';
+
+interface AusenciaRow extends RowDataPacket {
+  id_ausencia: number;
+  fecha_inicio: Date;
+  fecha_fin: Date;
+  descripcion: string | null;
+  nombre_tipo_ausencia: string;
+  nombre_colaborador: string;
+  apellido_colaborador: string;
+  nombre_puesto: string;
+  nombre_usuario_registro: string;
+  apellido_usuario_registro: string;
+  fecha_registro: Date;
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const from = searchParams.get('from');
+  const to = searchParams.get('to');
+
+  if (!from || !to) {
+    return NextResponse.json({ error: 'Parámetros "from" y "to" son requeridos' }, { status: 400 });
+  }
+
+  try {
+    const connection = await getConnection('cartagena');
+    
+    const [rows] = await connection.execute<AusenciaRow[]>(`
+      SELECT 
+        a.id_ausencia,
+        a.fecha_inicio,
+        a.fecha_fin,
+        a.descripcion,
+        ta.nombre_tipo_ausencia,
+        CONCAT(c.nombre, ' ', c.apellido) AS nombre_colaborador,
+        c.nombre AS nombre_colaborador_nombre,
+        c.apellido AS apellido_colaborador,
+        p.nombre_puesto,
+        CONCAT(u.nombre, ' ', u.apellido) AS nombre_usuario_registro,
+        u.nombre AS nombre_usuario_registro_nombre,
+        u.apellido AS apellido_usuario_registro,
+        a.fecha_registro
+      FROM ausencias a
+      JOIN colaboradores c ON a.id_colaborador = c.id
+      JOIN puestos p ON a.id_puesto = p.id_puesto
+      JOIN tipos_ausencia ta ON a.id_tipo_ausencia = ta.id_tipo_ausencia
+      JOIN users u ON a.id_usuario_registro = u.id
+      WHERE a.activo = TRUE 
+        AND DATE(a.fecha_inicio) BETWEEN ? AND ?
+      ORDER BY a.fecha_inicio DESC
+    `, [from, to]);
+
+    await connection.end();
+
+    console.log('Datos crudos de ausencias (Cartagena):', rows);
+
+    const standardizedData = {
+      data: (Array.isArray(rows) ? rows : []).map((row) => {
+        return {
+          id_ausencia: row.id_ausencia,
+          fecha_inicio: row.fecha_inicio instanceof Date ? row.fecha_inicio.toISOString().split('T')[0] : row.fecha_inicio,
+          fecha_fin: row.fecha_fin instanceof Date ? row.fecha_fin.toISOString().split('T')[0] : row.fecha_fin,
+          descripcion: row.descripcion || '',
+          tipo_ausencia: row.nombre_tipo_ausencia,
+          colaborador: row.nombre_colaborador,
+          puesto: row.nombre_puesto,
+          usuario_registro: row.nombre_usuario_registro,
+          fecha_registro: row.fecha_registro instanceof Date ? row.fecha_registro.toISOString().split('T')[0] : row.fecha_registro,
+          proyecto: 'CARTAGENA',
+          duracion_dias: Math.ceil((new Date(row.fecha_fin).getTime() - new Date(row.fecha_inicio).getTime()) / (1000 * 60 * 60 * 24)) + 1
+        };
+      }),
+    };
+
+    console.log('Datos estandarizados de ausencias enviados (Cartagena):', standardizedData);
+    return NextResponse.json(standardizedData);
+  } catch (error) {
+    console.error('Error fetching ausencias de Cartagena:', error);
+    return NextResponse.json({ error: 'Error al obtener datos de ausencias de Cartagena' }, { status: 500 });
+  }
+} 
