@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Clock } from "lucide-react";
 import { AusenciasModal } from "./AusenciasModal";
 import { AusenciasPorPuestoModal } from "./AusenciasPorPuestoModal";
+import { useData } from "@/lib/contexts/DataContext";
 
 // Paleta de colores para las barras de progreso
 const colorPalette = [
@@ -34,21 +35,6 @@ const lineClampStyle = {
   textOverflow: 'ellipsis' as const,
 };
 
-interface Ausencia {
-  id_ausencia: number;
-  fecha_inicio: string;
-  fecha_fin: string;
-  descripcion: string;
-  tipo_ausencia: string;
-  colaborador: string;
-  puesto: string;
-  usuario_registro: string;
-  fecha_registro: string;
-  proyecto: string;
-  duracion_dias: number;
-  cliente: string;
-}
-
 interface DateRange {
   from: string;
   to: string;
@@ -59,61 +45,11 @@ interface AusenciasOverviewProps {
 }
 
 export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
-  const [ausencias, setAusencias] = useState<Ausencia[]>([]);
-  const [totalAusencias, setTotalAusencias] = useState(0);
-  const [totalDiasAusencia, setTotalDiasAusencia] = useState(0);
+  const { ausencias, totalAusencias, promedioDiasAusencia, tiposAusencia, loading } = useData();
   const [modalOpen, setModalOpen] = useState(false);
   const [clienteModalOpen, setClienteModalOpen] = useState(false);
   const [clienteSeleccionado, setClienteSeleccionado] = useState<string>('');
-  const [ausenciasPorClienteSeleccionado, setAusenciasPorClienteSeleccionado] = useState<Ausencia[]>([]);
-  const [tiposAusencia, setTiposAusencia] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [barranquillaResp, cartagenaResp, tiposResp] = await Promise.all([
-          fetch(`/api/ausencias/barranquilla?from=${dateRange.from}&to=${dateRange.to}`),
-          fetch(`/api/ausencias/cartagena?from=${dateRange.from}&to=${dateRange.to}`),
-          fetch('/api/ausencias/tipos'),
-        ]);
-
-        const [barranquillaData, cartagenaData, tiposData] = await Promise.all([
-          barranquillaResp.json(),
-          cartagenaResp.json(),
-          tiposResp.json(),
-        ]);
-
-        console.log("Barranquilla Ausencias Data:", barranquillaData);
-        console.log("Cartagena Ausencias Data:", cartagenaData);
-        console.log("Tipos de ausencia:", tiposData);
-
-        const allAusencias = [
-          ...(barranquillaData.data || []),
-          ...(cartagenaData.data || []),
-        ];
-
-        // Eliminar duplicados basándose en id_ausencia y proyecto
-        const uniqueAusencias = allAusencias.filter((ausencia, index, self) => 
-          index === self.findIndex(a => 
-            a.id_ausencia === ausencia.id_ausencia && a.proyecto === ausencia.proyecto
-          )
-        );
-
-        console.log("Total ausencias antes de eliminar duplicados:", allAusencias.length);
-        console.log("Total ausencias después de eliminar duplicados:", uniqueAusencias.length);
-
-        console.log("All Ausencias in AusenciasOverview:", uniqueAusencias);
-        setAusencias(uniqueAusencias);
-        setTotalAusencias(uniqueAusencias.length);
-        setTotalDiasAusencia(uniqueAusencias.reduce((total, ausencia) => total + ausencia.duracion_dias, 0));
-        setTiposAusencia(tiposData.data || []);
-      } catch (error) {
-        console.error("Error al obtener datos de ausencias:", error);
-      }
-    };
-
-    fetchData();
-  }, [dateRange]);
+  const [ausenciasPorClienteSeleccionado, setAusenciasPorClienteSeleccionado] = useState<any[]>([]);
 
   // Calcular métricas
   const ausenciasPorTipo = ausencias.reduce<Record<string, number>>((acc, ausencia) => {
@@ -141,8 +77,6 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
     }
   });
 
-  const promedioDiasAusencia = totalAusencias > 0 ? (totalDiasAusencia / totalAusencias).toFixed(1) : "0";
-
   const handleProyectoClick = (proyecto: string) => {
     const ausenciasDelProyecto = ausencias.filter(ausencia => ausencia.proyecto === proyecto);
     console.log(`Ausencias filtradas para ${proyecto}:`, ausenciasDelProyecto);
@@ -163,7 +97,7 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
     },
     {
       title: "Promedio días por ausencia",
-      value: promedioDiasAusencia,
+      value: promedioDiasAusencia.toFixed(1),
       icon: Clock,
       description: "Días promedio por ausencia",
       color: "text-green-600",

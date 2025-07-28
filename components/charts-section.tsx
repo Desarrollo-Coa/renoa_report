@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
- import {
+import {
   BarChart,
   Bar,
   XAxis,
@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
   Cell,
 } from "recharts";
 import { NovedadesModal } from "./NovedadesModal";
+import { useData } from "@/lib/contexts/DataContext";
 
 // Paleta de colores para los gráficos
 const colorPalette = [
@@ -119,54 +120,10 @@ interface ChartsSectionProps {
 }
 
 export function ChartsSection({ dateRange }: ChartsSectionProps) {
-  const [novedades, setNovedades] = useState<Novedad[]>([]);
+  const { novedades } = useData();
   const [showModal, setShowModal] = useState(false);
   const [eventosSeleccionados, setEventosSeleccionados] = useState<Novedad[]>([]);
   const [modalTitulo, setModalTitulo] = useState("");
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [cartagenaResp, barranquillaResp, cementosResp, argosResp] = await Promise.all([
-          fetch(`/api/novedades/cartagena?from=${dateRange.from}&to=${dateRange.to}`),
-          fetch(`/api/novedades/barranquilla?from=${dateRange.from}&to=${dateRange.to}`),
-          fetch(`/api/novedades/cementos?from=${dateRange.from}&to=${dateRange.to}`),
-          fetch(`/api/novedades/grupo-argos?from=${dateRange.from}&to=${dateRange.to}`),
-        ]);
-
-        if (!cartagenaResp.ok || !barranquillaResp.ok || !cementosResp.ok || !argosResp.ok) {
-          throw new Error("Una o más respuestas de la API fallaron");
-        }
-
-        const [cartagenaData, barranquillaData, cementosData, argosData] = await Promise.all([
-          cartagenaResp.json(),
-          barranquillaResp.json(),
-          cementosResp.json(),
-          argosResp.json(),
-        ]);
-
-        console.log("Cartagena Data:", cartagenaData);
-        console.log("Barranquilla Data:", barranquillaData);
-        console.log("Cementos Data:", cementosData);
-        console.log("Argos Data:", argosData);
-
-        const allNovedades = [
-          ...(cartagenaData.data || []),
-          ...(barranquillaData.data || []),
-          ...(cementosData.data || []),
-          ...(argosData.data || []),
-        ];
-
-        console.log("All Novedades in ChartsSection:", allNovedades);
-        setNovedades(allNovedades);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        setNovedades([]);
-      }
-    };
-
-    fetchData();
-  }, [dateRange]);
 
   const dataPorProyecto = useMemo<ProyectoData[]>(() => {
     const eventos: Record<string, number> = {};

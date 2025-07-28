@@ -1,16 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ListChecks, CalendarDays, Star } from "lucide-react"
 import { DonutChart } from "./ui/donut-chart"
-
-interface Novedad {
-  fecha: string
-  tipo: string
-  valor: number
-  proyecto: string
-}
+import { useData } from "@/lib/contexts/DataContext"
 
 interface DateRange {
   from: string
@@ -34,51 +28,13 @@ interface MetricsCardsProps {
 }
 
 export function MetricsCards({ dateRange, setDateRange }: MetricsCardsProps) {
-  const [novedades, setNovedades] = useState<Novedad[]>([])
+  const { novedades, loading, updateDateRange } = useData()
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [cartagenaResp, barranquillaResp, cementosResp, argosResp] = await Promise.all([
-          fetch(`/api/novedades/cartagena?from=${dateRange.from}&to=${dateRange.to}`),
-          fetch(`/api/novedades/barranquilla?from=${dateRange.from}&to=${dateRange.to}`),
-          fetch(`/api/novedades/cementos?from=${dateRange.from}&to=${dateRange.to}`),
-          fetch(`/api/novedades/grupo-argos?from=${dateRange.from}&to=${dateRange.to}`),
-        ])
-
-        if (!cartagenaResp.ok || !barranquillaResp.ok || !cementosResp.ok || !argosResp.ok) {
-          throw new Error("Una o más respuestas de la API fallaron")
-        }
-
-        const [cartagenaData, barranquillaData, cementosData, argosData] = await Promise.all([
-          cartagenaResp.json(),
-          barranquillaResp.json(),
-          cementosResp.json(),
-          argosResp.json(),
-        ])
-
-        console.log("Cartagena Data:", cartagenaData)
-        console.log("Barranquilla Data:", barranquillaData)
-        console.log("Cementos Data:", cementosData)
-        console.log("Argos Data:", argosData)
-
-        const allNovedades = [
-          ...(cartagenaData.data || []),
-          ...(barranquillaData.data || []),
-          ...(cementosData.data || []),
-          ...(argosData.data || []),
-        ]
-
-        console.log("All Novedades in MetricsCards:", allNovedades)
-        setNovedades(allNovedades)
-      } catch (error) {
-        console.error("Error al obtener datos:", error)
-        setNovedades([])
-      }
-    }
-
-    fetchData()
-  }, [dateRange])
+  // Actualizar datos cuando cambie el rango de fechas
+  const handleDateRangeChange = (newDateRange: DateRange) => {
+    setDateRange(newDateRange);
+    updateDateRange(newDateRange);
+  };
 
   const totalDaysInRange = Math.floor(
     (new Date(dateRange.to).setHours(23, 59, 59, 999) - new Date(dateRange.from).setHours(0, 0, 0, 0)) / (1000 * 60 * 60 * 24)
@@ -159,7 +115,7 @@ export function MetricsCards({ dateRange, setDateRange }: MetricsCardsProps) {
                         className="border rounded px-1 py-0.5 text-xs"
                         value={dateRange.from}
                         max={dateRange.to}
-                        onChange={e => setDateRange(r => ({ ...r, from: e.target.value }))}
+                        onChange={e => handleDateRangeChange({ ...dateRange, from: e.target.value })}
                       />
                     </div>
                     <div>
@@ -170,7 +126,7 @@ export function MetricsCards({ dateRange, setDateRange }: MetricsCardsProps) {
                         value={dateRange.to}
                         min={dateRange.from}
                         max={new Date().toISOString().slice(0, 10)}
-                        onChange={e => setDateRange(r => ({ ...r, to: e.target.value }))}
+                        onChange={e => handleDateRangeChange({ ...dateRange, to: e.target.value })}
                       />
                     </div>
                   </div>

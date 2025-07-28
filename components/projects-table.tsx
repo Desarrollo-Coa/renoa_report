@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, MoreHorizontal } from "lucide-react";
 import { NovedadesModal } from "@/components/NovedadesModal";
 import Image from "next/image";
+import { useData } from "@/lib/contexts/DataContext";
 
 // Paleta de colores para las barras de progreso
 const colorPalette = [
@@ -27,27 +28,21 @@ const getColorByIndex = (index: number): string => {
   return colorPalette[index % colorPalette.length];
 };
 
-interface Novedad {
-  id_novedad: number;
-  fecha: string;
-  tipo: string;
-  usuario: string;
-  descripcion: string;
-  gestion: string;
-  critico: boolean;
-  consecutivo: string | number;
-  proyecto: string;
-  puesto: string;
-  cliente: string;
-  imagenes: {
-    id_imagen?: number;
-    id_archivo?: number;
-    url_imagen?: string;
-    url_archivo?: string;
-    fecha_subida: string;
-    nombre_archivo?: string;
-  }[];
-}
+// Función para obtener el logo del proyecto
+const getProjectLogo = (proyecto: string): string => {
+  switch (proyecto) {
+    case "GRUPO ARGOS":
+      return "/img/GA.jpeg";
+    case "CEMENTOS":
+      return "/img/CEMENTO.jpeg";
+    case "BARRANQUILLA":
+      return "/img/BARRANQUILLA.jpeg";
+    case "CARTAGENA":
+      return "/img/CARTAGENA.jpeg";
+    default:
+      return "/img/globe.svg";
+  }
+};
 
 interface DateRange {
   from: string;
@@ -67,93 +62,41 @@ interface ProjectsTableProps {
 } 
 
 export function ProjectsTable({ dateRange }: ProjectsTableProps) {
-  const [projectsData, setProjectsData] = useState<Project[]>([]);
-  const [novedades, setNovedades] = useState<Novedad[]>([]);
+  const { novedades } = useData();
   const [showModal, setShowModal] = useState(false);
-  const [eventosSeleccionados, setEventosSeleccionados] = useState<Novedad[]>([]);
+  const [eventosSeleccionados, setEventosSeleccionados] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [cartagenaResp, barranquillaResp, cementosResp, argosResp] = await Promise.all([
-          fetch(`/api/novedades/cartagena?from=${dateRange.from}&to=${dateRange.to}`),
-          fetch(`/api/novedades/barranquilla?from=${dateRange.from}&to=${dateRange.to}`),
-          fetch(`/api/novedades/cementos?from=${dateRange.from}&to=${dateRange.to}`),
-          fetch(`/api/novedades/grupo-argos?from=${dateRange.from}&to=${dateRange.to}`),
-        ]);
+  // Calcular datos de proyectos usando useMemo
+  const projectsData = useMemo(() => {
+    const projectsMap = new Map<string, { cantidad: number; negocios: Set<string> }>();
 
-        if (!cartagenaResp.ok || !barranquillaResp.ok || !cementosResp.ok || !argosResp.ok) {
-          throw new Error("Una o más respuestas de la API fallaron");
+    // Inicializar todos los proyectos disponibles
+    const proyectosDisponibles = ['GRUPO ARGOS', 'CEMENTOS', 'BARRANQUILLA', 'CARTAGENA'];
+    proyectosDisponibles.forEach(proyecto => {
+      projectsMap.set(proyecto, { cantidad: 0, negocios: new Set() });
+    });
+
+    // Contar novedades por proyecto
+    novedades.forEach(novedad => {
+      const proyecto = novedad.proyecto;
+      if (projectsMap.has(proyecto)) {
+        const projectData = projectsMap.get(proyecto)!;
+        projectData.cantidad++;
+        if (novedad.cliente) {
+          projectData.negocios.add(novedad.cliente);
         }
-
-        const [cartagenaData, barranquillaData, cementosData, argosData] = await Promise.all([
-          cartagenaResp.json(),
-          barranquillaResp.json(),
-          cementosResp.json(),
-          argosResp.json(),
-        ]);
-
-        console.log("Cartagena Data:", cartagenaData);
-        console.log("Barranquilla Data:", barranquillaData);
-        console.log("Cementos Data:", cementosData);
-        console.log("Argos Data:", argosData);
-
-        const allNovedades = [
-          ...(cartagenaData.data || []),
-          ...(barranquillaData.data || []),
-          ...(cementosData.data || []),
-          ...(argosData.data || []),
-        ];
-
-        const totalEventos =
-          (cartagenaData.data?.length || 0) +
-          (barranquillaData.data?.length || 0) +
-          (cementosData.data?.length || 0) +
-          (argosData.data?.length || 0);
-
-        const newProjectsData: Project[] = [
-          {
-            proyecto: "GRUPO ARGOS",
-            cantidadEventos: argosData.data?.length || 0,
-            porcentaje: totalEventos > 0 ? ((argosData.data?.length || 0) / totalEventos) * 100 : 0,
-            logo: "/img/GA.jpeg",
-            negocios: ["S", "B", "NDU"],
-          },
-          {
-            proyecto: "CEMENTOS",
-            cantidadEventos: cementosData.data?.length || 0,
-            porcentaje: totalEventos > 0 ? ((cementosData.data?.length || 0) / totalEventos) * 100 : 0,
-            logo: "/img/CEMENTO.jpeg",
-            negocios: ["ZN", "ZC", "ZNO", "ZS"],
-          },
-          {
-            proyecto: "BARRANQUILLA",
-            cantidadEventos: barranquillaData.data?.length || 0,
-            porcentaje: totalEventos > 0 ? ((barranquillaData.data?.length || 0) / totalEventos) * 100 : 0,
-            logo: "/img/BARRANQUILLA.jpeg",
-            negocios: ["D", "F", "C"],
-          },
-          {
-            proyecto: "CARTAGENA",
-            cantidadEventos: cartagenaData.data?.length || 0,
-            porcentaje: totalEventos > 0 ? ((cartagenaData.data?.length || 0) / totalEventos) * 100 : 0,
-            logo: "/img/CARTAGENA.jpeg",
-            negocios: ["O", "L", "P"],
-          },
-        ];
-
-        console.log("Projects Data:", newProjectsData);
-        setProjectsData(newProjectsData);
-        setNovedades(allNovedades);
-      } catch (error) {
-        console.error("Error al obtener datos:", error);
-        setProjectsData([]);
-        setNovedades([]);
       }
-    };
+    });
 
-    fetchData();
-  }, [dateRange]);
+    const totalNovedades = novedades.length;
+    return Array.from(projectsMap.entries()).map(([proyecto, data]) => ({
+      proyecto,
+      cantidadEventos: data.cantidad,
+      porcentaje: totalNovedades > 0 ? (data.cantidad / totalNovedades) * 100 : 0,
+      logo: getProjectLogo(proyecto),
+      negocios: Array.from(data.negocios)
+    }));
+  }, [novedades]);
 
   const handleRowClick = (proyecto: string) => {
     const selectedNovedades = novedades.filter((nov) => nov.proyecto === proyecto);
@@ -202,8 +145,12 @@ export function ProjectsTable({ dateRange }: ProjectsTableProps) {
                 {projectsData.map((project, index) => (
                   <tr
                     key={project.proyecto}
-                    className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleRowClick(project.proyecto)}
+                    className={`border-b border-gray-100 ${
+                      project.cantidadEventos > 0 
+                        ? 'hover:bg-gray-50 cursor-pointer' 
+                        : 'opacity-60'
+                    }`}
+                    onClick={() => project.cantidadEventos > 0 ? handleRowClick(project.proyecto) : null}
                   >
                     <td className="py-4 px-6">
                       <div className="flex items-center">
@@ -214,38 +161,29 @@ export function ProjectsTable({ dateRange }: ProjectsTableProps) {
                           height={32}
                           className="w-8 h-8 rounded-full mr-3"
                         />
-                        <span className="font-medium text-gray-900">{project.proyecto}</span>
+                        <span className={`font-medium ${
+                          project.cantidadEventos > 0 ? 'text-gray-900' : 'text-gray-400'
+                        }`}>
+                          {project.proyecto}
+                        </span>
                       </div>
                     </td>
-                    {/* <td className="py-4 px-6">
-                      <div className="flex -space-x-2">
-                        {project.negocios.slice(0, 4).map((negocio, negocioIndex) => (
-                          <Avatar key={negocioIndex} className="w-8 h-8 border-2 border-white">
-                            <AvatarFallback className="text-xs">{negocio}</AvatarFallback>
-                          </Avatar>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-center">
-                      <span
-                        className={`text-sm font-semibold ${getEventColor(project.cantidadEventos)} cursor-pointer hover:underline`}
-                        onClick={() => handleRowClick(project.proyecto)}
-                      >
-                        {project.cantidadEventos}
-                      </span>
-                    </td> */}
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-center">
                         <div className="w-24">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-gray-900">{project.porcentaje.toFixed(2)}%</span>
+                            <span className={`text-xs font-semibold ${
+                              project.cantidadEventos > 0 ? 'text-gray-900' : 'text-gray-400'
+                            }`}>
+                              {project.porcentaje.toFixed(2)}%
+                            </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
                             <div 
                               className="h-2 rounded-full transition-all duration-300"
                               style={{ 
                                 width: `${project.porcentaje}%`,
-                                backgroundColor: getColorByIndex(index)
+                                backgroundColor: project.cantidadEventos > 0 ? getColorByIndex(index) : '#d1d5db'
                               }}
                             ></div>
                           </div>
