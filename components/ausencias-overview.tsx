@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, Users, Clock, TrendingUp, AlertTriangle } from "lucide-react";
+import { Users, Clock } from "lucide-react";
 import { AusenciasModal } from "./AusenciasModal";
 import { AusenciasPorPuestoModal } from "./AusenciasPorPuestoModal";
 

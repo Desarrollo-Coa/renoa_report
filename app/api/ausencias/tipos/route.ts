@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getConnection } from '@/lib/db';
 import { RowDataPacket } from 'mysql2/promise';
 
@@ -8,7 +8,7 @@ interface TipoAusenciaRow extends RowDataPacket {
   activo: boolean;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     let todosLosTipos: string[] = [];
 
