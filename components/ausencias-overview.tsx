@@ -242,7 +242,7 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
             <CardTitle className="text-lg font-semibold">Ausencias por proyecto</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+              <div className="space-y-3">
               {Object.entries(ausenciasPorProyecto)
                 .sort(([a], [b]) => a.localeCompare(b)) // Ordenar alfabéticamente
                 .map(([proyecto, count], index) => (
@@ -270,7 +270,7 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
                     </div>
                   </div>
                 ))}
-            </div>
+              </div>
           </CardContent>
         </Card>
       </div>

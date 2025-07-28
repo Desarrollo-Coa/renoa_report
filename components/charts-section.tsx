@@ -196,10 +196,12 @@ export function ChartsSection({ dateRange }: ChartsSectionProps) {
     for (const nov of novedades) {
       tipos[nov.tipo] = (tipos[nov.tipo] || 0) + 1;
     }
-    return Object.entries(tipos).map(([tipo, cantidad]) => ({
-      tipo,
-      cantidad,
-    }));
+    return Object.entries(tipos)
+      .map(([tipo, cantidad]) => ({
+        tipo,
+        cantidad,
+      }))
+      .sort((a, b) => b.cantidad - a.cantidad); // Ordenar de mayor a menor
   }, [novedades]);
 
   const maxProyecto = dataPorProyecto.length > 0 ? Math.max(...dataPorProyecto.map((d) => d.cantidad)) * 1.3 : 1;
@@ -304,7 +306,7 @@ export function ChartsSection({ dateRange }: ChartsSectionProps) {
             <p className="text-sm text-gray-500">Distribución por tipo de evento</p>
           </CardHeader>
           <CardContent className="px-6 pb-6">
-            <div className="h-56 mb-4">
+            <div className="h-64 mb-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={dataPorTipo}
@@ -317,7 +319,7 @@ export function ChartsSection({ dateRange }: ChartsSectionProps) {
                   }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="tipo" type="category" fontSize={10} tickLine={false} axisLine={false} tick={{ fill: "#6b7280" }} angle={-45} textAnchor="end" height={80} />
+                  <XAxis dataKey="tipo" type="category" fontSize={9} tickLine={false} axisLine={false} tick={{ fill: "#6b7280" }} angle={-45} textAnchor="end" height={100} interval={0} />
                   <YAxis type="number" allowDecimals={false} fontSize={12} tickLine={false} axisLine={false} tick={{ fill: "#6b7280" }} domain={[0, Math.ceil(maxTipo)]} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend />
