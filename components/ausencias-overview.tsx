@@ -44,12 +44,12 @@ interface AusenciasOverviewProps {
   dateRange: DateRange;
 }
 
-export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
-  const { ausencias, totalAusencias, promedioDiasAusencia, tiposAusencia, loading } = useData();
+export function AusenciasOverview({ dateRange: _dateRange }: AusenciasOverviewProps) {
+  const { ausencias, totalAusencias, promedioDiasAusencia, tiposAusencia } = useData();
   const [modalOpen, setModalOpen] = useState(false);
   const [clienteModalOpen, setClienteModalOpen] = useState(false);
   const [clienteSeleccionado, setClienteSeleccionado] = useState<string>('');
-  const [ausenciasPorClienteSeleccionado, setAusenciasPorClienteSeleccionado] = useState<any[]>([]);
+  const [ausenciasPorClienteSeleccionado, setAusenciasPorClienteSeleccionado] = useState<typeof ausencias>([]);
 
   // Calcular métricas
   const ausenciasPorTipo = ausencias.reduce<Record<string, number>>((acc, ausencia) => {

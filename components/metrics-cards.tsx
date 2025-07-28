@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { ListChecks, CalendarDays, Star } from "lucide-react"
 import { DonutChart } from "./ui/donut-chart"
@@ -28,7 +27,7 @@ interface MetricsCardsProps {
 }
 
 export function MetricsCards({ dateRange, setDateRange }: MetricsCardsProps) {
-  const { novedades, loading, updateDateRange } = useData()
+  const { novedades, updateDateRange } = useData()
 
   // Actualizar datos cuando cambie el rango de fechas
   const handleDateRangeChange = (newDateRange: DateRange) => {

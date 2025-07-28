@@ -49,22 +49,14 @@ interface DateRange {
   to: string;
 }
 
-interface Project {
-  proyecto: string;
-  cantidadEventos: number;
-  porcentaje: number;
-  logo: string;
-  negocios: string[];
-}
-
 interface ProjectsTableProps {
   dateRange: DateRange;
 } 
 
-export function ProjectsTable({ dateRange }: ProjectsTableProps) {
+export function ProjectsTable({ dateRange: _dateRange }: ProjectsTableProps) {
   const { novedades } = useData();
   const [showModal, setShowModal] = useState(false);
-  const [eventosSeleccionados, setEventosSeleccionados] = useState<any[]>([]);
+  const [eventosSeleccionados, setEventosSeleccionados] = useState<typeof novedades>([]);
 
   // Calcular datos de proyectos usando useMemo
   const projectsData = useMemo(() => {
