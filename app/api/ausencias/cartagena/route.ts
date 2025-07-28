@@ -14,6 +14,7 @@ interface AusenciaRow extends RowDataPacket {
   nombre_usuario_registro: string;
   apellido_usuario_registro: string;
   fecha_registro: Date;
+  nombre_cliente: string;
 }
 
 export async function GET(request: NextRequest) {
@@ -42,12 +43,15 @@ export async function GET(request: NextRequest) {
         CONCAT(u.nombre, ' ', u.apellido) AS nombre_usuario_registro,
         u.nombre AS nombre_usuario_registro_nombre,
         u.apellido AS apellido_usuario_registro,
-        a.fecha_registro
+        a.fecha_registro,
+        COALESCE(neg.nombre_negocio, 'CARTAGENA') AS nombre_cliente
       FROM ausencias a
       JOIN colaboradores c ON a.id_colaborador = c.id
       JOIN puestos p ON a.id_puesto = p.id_puesto
       JOIN tipos_ausencia ta ON a.id_tipo_ausencia = ta.id_tipo_ausencia
       JOIN users u ON a.id_usuario_registro = u.id
+      LEFT JOIN unidades_negocio un ON p.id_unidad = un.id_unidad
+      LEFT JOIN negocios neg ON un.id_negocio = neg.id_negocio
       WHERE a.activo = TRUE 
         AND DATE(a.fecha_inicio) BETWEEN ? AND ?
       ORDER BY a.fecha_inicio DESC
@@ -70,7 +74,8 @@ export async function GET(request: NextRequest) {
           usuario_registro: row.nombre_usuario_registro,
           fecha_registro: row.fecha_registro instanceof Date ? row.fecha_registro.toISOString().split('T')[0] : row.fecha_registro,
           proyecto: 'CARTAGENA',
-          duracion_dias: Math.ceil((new Date(row.fecha_fin).getTime() - new Date(row.fecha_inicio).getTime()) / (1000 * 60 * 60 * 24)) + 1
+          duracion_dias: Math.ceil((new Date(row.fecha_fin).getTime() - new Date(row.fecha_inicio).getTime()) / (1000 * 60 * 60 * 24)) + 1,
+          cliente: row.nombre_cliente || 'CARTAGENA'
         };
       }),
     };

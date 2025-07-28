@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, Users, Clock, TrendingUp, AlertTriangle } from "lucide-react";
 import { AusenciasModal } from "./AusenciasModal";
+import { AusenciasPorPuestoModal } from "./AusenciasPorPuestoModal";
 
 // Estilos para line-clamp
 const lineClampStyle = {
@@ -24,6 +25,7 @@ interface Ausencia {
   fecha_registro: string;
   proyecto: string;
   duracion_dias: number;
+  cliente: string;
 }
 
 interface DateRange {
@@ -40,22 +42,29 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
   const [totalAusencias, setTotalAusencias] = useState(0);
   const [totalDiasAusencia, setTotalDiasAusencia] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
+  const [clienteModalOpen, setClienteModalOpen] = useState(false);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<string>('');
+  const [ausenciasPorClienteSeleccionado, setAusenciasPorClienteSeleccionado] = useState<Ausencia[]>([]);
+  const [tiposAusencia, setTiposAusencia] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [barranquillaResp, cartagenaResp] = await Promise.all([
+        const [barranquillaResp, cartagenaResp, tiposResp] = await Promise.all([
           fetch(`/api/ausencias/barranquilla?from=${dateRange.from}&to=${dateRange.to}`),
           fetch(`/api/ausencias/cartagena?from=${dateRange.from}&to=${dateRange.to}`),
+          fetch('/api/ausencias/tipos'),
         ]);
 
-        const [barranquillaData, cartagenaData] = await Promise.all([
+        const [barranquillaData, cartagenaData, tiposData] = await Promise.all([
           barranquillaResp.json(),
           cartagenaResp.json(),
+          tiposResp.json(),
         ]);
 
         console.log("Barranquilla Ausencias Data:", barranquillaData);
         console.log("Cartagena Ausencias Data:", cartagenaData);
+        console.log("Tipos de ausencia:", tiposData);
 
         const allAusencias = [
           ...(barranquillaData.data || []),
@@ -76,6 +85,7 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
         setAusencias(uniqueAusencias);
         setTotalAusencias(uniqueAusencias.length);
         setTotalDiasAusencia(uniqueAusencias.reduce((total, ausencia) => total + ausencia.duracion_dias, 0));
+        setTiposAusencia(tiposData.data || []);
       } catch (error) {
         console.error("Error al obtener datos de ausencias:", error);
       }
@@ -90,17 +100,28 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
     return acc;
   }, {});
 
+  // Asegurar que todos los tipos de la DB aparezcan, incluso con 0
+  tiposAusencia.forEach(tipo => {
+    if (!ausenciasPorTipo[tipo]) {
+      ausenciasPorTipo[tipo] = 0;
+    }
+  });
+
   const ausenciasPorProyecto = ausencias.reduce<Record<string, number>>((acc, ausencia) => {
     acc[ausencia.proyecto] = (acc[ausencia.proyecto] || 0) + 1;
     return acc;
   }, {});
 
-  const topTipoAusencia = Object.entries(ausenciasPorTipo).reduce(
-    (max, [tipo, count]) => (count > max.count ? { tipo, count } : max),
-    { tipo: "Ninguna", count: 0 }
-  );
-
   const promedioDiasAusencia = totalAusencias > 0 ? (totalDiasAusencia / totalAusencias).toFixed(1) : "0";
+
+  const handleProyectoClick = (proyecto: string) => {
+    const ausenciasDelProyecto = ausencias.filter(ausencia => ausencia.proyecto === proyecto);
+    console.log(`Ausencias filtradas para ${proyecto}:`, ausenciasDelProyecto);
+    console.log(`Clientes únicos en ${proyecto}:`, [...new Set(ausenciasDelProyecto.map(ausencia => ausencia.cliente))]);
+    setClienteSeleccionado(proyecto);
+    setAusenciasPorClienteSeleccionado(ausenciasDelProyecto);
+    setClienteModalOpen(true);
+  };
 
   const metrics = [
     {
@@ -112,35 +133,19 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
       bgColor: "bg-blue-50"
     },
     {
-      title: "Total días de ausencia",
-      value: totalDiasAusencia.toString(),
-      icon: CalendarDays,
-      description: "Días totales de ausencia",
-      color: "text-orange-600",
-      bgColor: "bg-orange-50"
-    },
-    {
       title: "Promedio días por ausencia",
       value: promedioDiasAusencia,
       icon: Clock,
       description: "Días promedio por ausencia",
       color: "text-green-600",
       bgColor: "bg-green-50"
-    },
-    {
-      title: "Tipo más frecuente",
-      value: `${topTipoAusencia.tipo} (${topTipoAusencia.count})`,
-      icon: TrendingUp,
-      description: "Tipo de ausencia más común",
-      color: "text-purple-600",
-      bgColor: "bg-purple-50"
     }
   ];
 
   return (
     <div className="space-y-6">
       {/* Métricas principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {metrics.map((metric, index) => {
           const Icon = metric.icon;
           return (
@@ -174,20 +179,26 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
           <CardContent>
             {Object.keys(ausenciasPorTipo).length > 0 ? (
               <div className="space-y-3">
-                {Object.entries(ausenciasPorTipo).map(([tipo, count]) => (
-                  <div key={tipo} className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{tipo}</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-24 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" 
-                          style={{ width: `${(count / totalAusencias) * 100}%` }}
-                        ></div>
+                {Object.entries(ausenciasPorTipo)
+                  .sort(([,a], [,b]) => b - a) // Ordenar por cantidad descendente
+                  .map(([tipo, count]) => (
+                    <div key={tipo} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">{tipo}</span>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              count > 0 ? 'bg-blue-600' : 'bg-gray-300'
+                            }`}
+                            style={{ width: count > 0 ? `${(count / totalAusencias) * 100}%` : '0%' }}
+                          ></div>
+                        </div>
+                        <span className={`text-sm font-medium ${count > 0 ? 'text-gray-900' : 'text-gray-400'}`}>
+                          {count}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium text-gray-900">{count}</span>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             ) : (
               <p className="text-center text-gray-500">No hay datos de ausencias para mostrar</p>
@@ -204,7 +215,11 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
             {Object.keys(ausenciasPorProyecto).length > 0 ? (
               <div className="space-y-3">
                 {Object.entries(ausenciasPorProyecto).map(([proyecto, count]) => (
-                  <div key={proyecto} className="flex items-center justify-between">
+                  <div 
+                    key={proyecto} 
+                    className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+                    onClick={() => handleProyectoClick(proyecto)}
+                  >
                     <span className="text-sm text-gray-600">{proyecto}</span>
                     <div className="flex items-center space-x-2">
                       <div className="w-24 bg-gray-200 rounded-full h-2">
@@ -225,64 +240,7 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
         </Card>
       </div>
 
-      {/* Lista de ausencias recientes */}
-      <Card className="bg-white shadow-sm">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold">Ausencias recientes</CardTitle>
-            {totalAusencias > 5 && (
-              <button
-                onClick={() => setModalOpen(true)}
-                className="text-sm text-blue-500 hover:text-blue-700 hover:underline"
-              >
-                Ver todas
-              </button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="max-h-[25rem] overflow-y-auto">
-          <div className="space-y-4">
-            {ausencias.length > 0 ? (
-              ausencias
-                .sort((a, b) => new Date(b.fecha_inicio).getTime() - new Date(a.fecha_inicio).getTime())
-                .slice(0, 5)
-                .map((ausencia, index) => (
-                  <div key={`${ausencia.id_ausencia}-${ausencia.proyecto}-${index}`} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                    <div className="p-2 rounded-lg bg-orange-100">
-                      <AlertTriangle className="h-4 w-4 text-orange-600" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">
-                        {ausencia.colaborador} - {ausencia.tipo_ausencia}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {ausencia.fecha_inicio} a {ausencia.fecha_fin} ({ausencia.duracion_dias} días)
-                      </p>
-                      <p className="text-xs text-gray-600 mt-1">
-                        {ausencia.puesto} • {ausencia.proyecto}
-                      </p>
-                      {ausencia.descripcion && (
-                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                          {ausencia.descripcion}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))
-            ) : (
-              <p className="text-center text-gray-500">No hay ausencias para mostrar.</p>
-            )}
-            {totalAusencias > 5 && (
-              <p 
-                className="text-center text-blue-500 text-sm hover:underline cursor-pointer"
-                onClick={() => setModalOpen(true)}
-              >
-                Ver todas las {totalAusencias} ausencias
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+
 
       {/* Modal para mostrar todas las ausencias */}
       <AusenciasModal
@@ -290,6 +248,14 @@ export function AusenciasOverview({ dateRange }: AusenciasOverviewProps) {
         onOpenChange={setModalOpen}
         ausencias={ausencias}
         titulo={`Todas las ausencias (${totalAusencias})`}
+      />
+
+      {/* Modal para mostrar ausencias por puesto del cliente */}
+      <AusenciasPorPuestoModal
+        open={clienteModalOpen}
+        onOpenChange={setClienteModalOpen}
+        ausencias={ausenciasPorClienteSeleccionado}
+        proyecto={clienteSeleccionado}
       />
     </div>
   );
