@@ -124,7 +124,6 @@ export function MetricsCards({ dateRange, setDateRange }: MetricsCardsProps) {
                         className="border rounded px-1 py-0.5 text-xs"
                         value={dateRange.to}
                         min={dateRange.from}
-                        max={new Date().toISOString().slice(0, 10)}
                         onChange={e => handleDateRangeChange({ ...dateRange, to: e.target.value })}
                       />
                     </div>
