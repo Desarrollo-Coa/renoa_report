@@ -1,20 +1,38 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'archivos-grupo-argos.nyc3.digitaloceanspaces.com',
+        hostname: 'nyc3.digitaloceanspaces.com',
+        port: '',
+        pathname: '/cloud-centralbq-ops-storage/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'nyc3.cdn.digitaloceanspaces.com',
+        port: '',
+        pathname: '/cloud-centralbq-ops-storage/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'nyc3.digitaloceanspaces.com',
+        port: '',
+        pathname: '/cloud-centralctg-ops-storage/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.digitaloceanspaces.com',
         port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'cloud-centralctg-ops-storage.nyc3.digitaloceanspaces.com',
+        hostname: '*.cdn.digitaloceanspaces.com',
         port: '',
         pathname: '/**',
       },
-
     ],
   },
 };
